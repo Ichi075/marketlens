@@ -1,3 +1,5 @@
+![MarketLens workspace with SPY and QQQ charts](assets/marketlens-workspace.png)
+
 # MarketLens
 
 **English** | [日本語](README.ja.md) | [简体中文](README.zh-CN.md)

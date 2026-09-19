@@ -1,3 +1,5 @@
+![并排显示 SPY 和 QQQ 图表的 MarketLens 界面](assets/marketlens-workspace.png)
+
 # MarketLens
 
 [English](README.md) | [日本語](README.ja.md) | **简体中文**
