@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1017">
+  <title>MarketLens — Interactive Demo</title>
+  <style>
+    :root{font-family:Inter,"Segoe UI",Arial,sans-serif;color:#edf3f7;background:#0b1017;font-synthesis:none}
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}button,input{font:inherit}button{cursor:pointer}
+    .app{height:100dvh;min-height:570px;display:grid;grid-template-columns:320px minmax(0,1fr);overflow:hidden}
+    .sidebar{min-height:0;display:flex;flex-direction:column;background:#121b24;border-right:1px solid #263542;z-index:3}
+    .brand{height:73px;flex:none;display:flex;align-items:center;gap:12px;padding:0 20px;border-bottom:1px solid #263542}
+    .mark{width:35px;height:35px;display:flex;align-items:end;justify-content:center;gap:3px;padding:9px;border-radius:10px;background:linear-gradient(145deg,#39dcad,#138f79);box-shadow:0 0 24px #30cfa333}
+    .mark i{display:block;width:4px;border-radius:4px;background:#0e5149}.mark i:nth-child(1){height:10px}.mark i:nth-child(2){height:17px}.mark i:nth-child(3){height:13px}
+    .brand-name{font-size:21px;letter-spacing:-1px;font-weight:800}.brand-sub{display:block;margin-top:1px;color:#8294a3;font-size:9px;letter-spacing:2.2px;font-weight:800}
+    .sidebar-top{padding:22px 18px 11px}.kicker{color:#758a9c;font-size:10px;font-weight:800;letter-spacing:1.8px}.sidebar-top h1{margin:4px 0 13px;font-size:26px;letter-spacing:-1.3px}.demo-pill{display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;border:1px solid #355648;border-radius:7px;background:#173027;color:#a8e9cc;font-size:11px;font-weight:700}.demo-pill:before{content:"";width:6px;height:6px;border-radius:50%;background:#4bddb4;box-shadow:0 0 8px #4bddb4}
+    .candidate-section{padding:10px 17px 13px;border-bottom:1px solid #263542}.section-heading{display:flex;justify-content:space-between;align-items:end;margin:0 3px 10px}.section-heading h2{margin:4px 0 0;font-size:17px;letter-spacing:-.4px}.section-heading small{color:#8193a2;font-size:10px;font-weight:700}.symbol-shape{font-size:12px;margin-right:8px}.strong-color{color:#41dbac}.weak-color{color:#f28f8b}.candidate-stack{display:grid;gap:5px}
+    .candidate{height:48px;width:100%;display:flex;align-items:center;gap:9px;text-align:left;border-radius:7px;padding:0 10px;border:1px solid #30443f;background:#1b2c2d;color:#e7f4ed;transition:background .15s,border-color .15s}.candidate:hover{background:#26403e;border-color:#4a7d6b}.candidate.weak{background:#30262c;border-color:#503840}.candidate.weak:hover{background:#403038}.candidate .rank{width:20px;color:#6ec5ac;font-size:11px;font-weight:800}.candidate.weak .rank{color:#d59a9a}.candidate .candidate-label{flex:1;font-size:12px;font-weight:800}.candidate .candidate-label small{display:block;margin-top:2px;color:#8ca3a1;font-size:10px;font-weight:500}.candidate .metric{text-align:right;font-size:11px;font-weight:800;color:#53dfb3}.candidate.weak .metric{color:#f4a09a}.candidate .metric small{display:block;margin-top:2px;color:#9aabb5;font-size:9px;font-weight:500}
+    .watch-head{display:flex;justify-content:space-between;align-items:end;padding:16px 20px 8px}.watch-head h2{margin:3px 0 0;font-size:16px;letter-spacing:-.3px}.watch-head h2 span{font-size:10px;color:#9fb0bc;background:#273643;padding:3px 5px;border-radius:4px;margin-left:4px}.watch-head>span{font-size:9px;color:#8da1af;letter-spacing:1px;font-weight:800}.filter-wrap{padding:0 16px 8px}.filter-wrap input{width:100%;height:32px;padding:0 10px;border:1px solid #324453;border-radius:6px;background:#18242f;color:#f5f9fc;outline:none;font-size:11px}.filter-wrap input:focus{border-color:#3dc9a5}.filter-wrap input::placeholder{color:#8195a5}
+    .watchlist{overflow:auto;min-height:0;padding:0 9px 9px;scrollbar-width:thin;scrollbar-color:#415667 transparent}.stock{width:100%;min-height:48px;display:flex;align-items:center;justify-content:space-between;padding:5px 9px;border:1px solid transparent;border-radius:6px;background:transparent;color:inherit;text-align:left}.stock:hover{background:#22333c;border-color:#344e55}.stock.current{background:#1d3039;border-color:#355760}.stock-left{display:flex;align-items:center;gap:8px}.stock-logo{display:grid;place-items:center;width:23px;height:23px;border-radius:50%;background:#2a3e4b;color:#c7dce4;font-size:10px;font-weight:800}.stock-name{font-size:11px;font-weight:800;letter-spacing:.2px}.badge{display:grid;place-items:center;width:16px;height:16px;border-radius:4px;font-size:9px;font-weight:800}.badge.strong{background:#24473b;color:#55dcaa}.badge.weak{background:#4d3037;color:#f3a09a}.stock-right{text-align:right}.stock-right b{display:block;font-size:11px}.stock-right small{font-size:10px;font-weight:800}.positive{color:#42d9a7!important}.negative{color:#f0938b!important}.sidebar-foot{flex:none;border-top:1px solid #273644;padding:10px 20px 13px;color:#748b9b;font-size:10px;line-height:1.5}
+    .main{min-width:0;min-height:0;display:flex;flex-direction:column}.topbar{height:73px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 24px;border-bottom:1px solid #263542}.topbar h2{margin:3px 0 0;font-size:22px;letter-spacing:-.9px}.top-actions{display:flex;align-items:center;gap:10px}.toggle{padding:9px 12px;border:1px solid #394c58;border-radius:7px;background:#1b2a35;color:#d7e5eb;font-size:11px;font-weight:700;white-space:nowrap}.toggle:hover{background:#253c47}.mobile-menu,.close-menu{display:none}
+    .chart-grid{flex:1;min-height:0;display:grid;grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:10px;padding:11px}.panel{min-height:0;display:flex;flex-direction:column;overflow:hidden;border:1px solid #2b3d4b;border-radius:9px;background:#111a24}.panel.focused{border-color:#477e70;box-shadow:0 0 0 1px #477e7033}.panel-head{min-height:63px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 17px;border-bottom:1px solid #273846}.chart-id{display:flex;align-items:center;gap:10px;min-width:0}.number{display:grid;place-items:center;width:33px;height:33px;flex:none;border-radius:7px;background:#1d4039;color:#54e0b5;font-size:10px;font-weight:800}.panel:nth-child(2) .number{background:#293855;color:#adc0ff}.chart-title{display:flex;align-items:center;gap:12px;margin-top:2px}.chart-title strong{font-size:18px;letter-spacing:-.4px}.chart-title small{font-size:11px;font-weight:700;white-space:nowrap}.panel-controls{display:flex;align-items:center;gap:8px}.periods{display:flex;gap:3px;padding:3px;border:1px solid #314451;border-radius:6px;background:#17242d}.periods button{border:0;background:none;color:#8ea1ae;font-size:10px;font-weight:800;border-radius:4px;padding:5px 7px}.periods button.active{background:#304d4c;color:#b7f7df}.symbol-form{display:flex;align-items:center;width:180px;height:33px;overflow:hidden;border:1px solid #3a4c58;border-radius:6px;background:#1b2a35}.symbol-form:focus-within{border-color:#46b99f}.symbol-form input{min-width:0;flex:1;width:80px;padding:0 9px;border:0;outline:0;background:none;color:#f1f7f8;font-size:11px;font-weight:800;text-transform:uppercase}.symbol-form button{height:100%;border:0;background:#285044;color:#b9f5da;font-size:10px;font-weight:800;padding:0 10px}.symbol-form button:hover{background:#346653}
+    .chart-content{position:relative;flex:1;min-height:0;overflow:hidden}.tv-host{position:absolute;inset:0;background:#111a24}.tv-host .tradingview-widget-container{width:100%;height:100%;display:flex;flex-direction:column}.tv-host .tradingview-widget-container__widget{width:100%;height:calc(100% - 24px)}.tv-host .tradingview-widget-container__widget iframe{width:100%!important;height:100%!important}.tv-credit{height:24px;display:flex;align-items:center;padding-left:12px;color:#849eae;font-size:10px}.tv-credit a{color:#9cbdca;text-decoration:none}.tv-credit a:hover{text-decoration:underline}
+    @media(max-width:1150px){.app{grid-template-columns:285px minmax(0,1fr)}.periods{display:none}.chart-title small{display:none}}
+    @media(max-width:760px){.app{display:block;min-height:0}.sidebar{position:fixed;left:0;top:0;bottom:0;width:min(88vw,340px);transform:translateX(-103%);transition:transform .2s;box-shadow:15px 0 40px #0008}.sidebar.open{transform:none}.main{height:100dvh}.topbar{height:63px;padding:0 12px}.topbar h2{font-size:17px}.mobile-menu,.close-menu{display:grid;place-items:center;width:32px;height:32px;border:1px solid #3c515d;border-radius:6px;background:#1b2a35;color:#eef6f7}.top-left{display:flex;align-items:center;gap:10px}.top-actions{gap:5px}.toggle{padding:8px;font-size:10px}.chart-grid{gap:7px;padding:7px}.panel-head{padding:0 9px;min-height:56px}.number{width:27px;height:27px}.chart-id{gap:7px}.chart-title strong{font-size:16px}.symbol-form{width:132px;height:31px}.symbol-form button{padding:0 7px}.panel-head .kicker{font-size:8px}}
+    @media(max-height:690px){.topbar{height:60px}.panel-head{min-height:52px}.chart-grid{gap:7px;padding:7px}}
+    .app{display:block}.main{height:100dvh}.sidebar{position:fixed;inset:0 auto 0 0;width:min(88vw,340px);transform:translateX(-103%);transition:transform .2s;box-shadow:15px 0 40px #0008;z-index:30}.sidebar.open{transform:translateX(0)}.sidebar-backdrop{display:none;position:fixed;inset:0;z-index:25;background:#03070bb8}.sidebar-backdrop.open{display:block}.mobile-menu,.close-menu{display:grid;place-items:center;width:34px;height:34px;flex:none;border:1px solid #3c515d;border-radius:6px;background:#1b2a35;color:#eef6f7}.close-menu{margin-left:auto}.top-left{display:flex;align-items:center;gap:12px}.chart-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+    @media(max-width:1120px){.periods{display:none}.chart-title small{display:none}.symbol-form{width:145px}.panel-head{padding:0 10px}.topbar{padding:0 15px}}
+    @media(max-width:760px){.chart-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}.panel-head{min-height:94px;flex-direction:column;align-items:stretch;justify-content:center;padding:7px;gap:6px}.symbol-form{width:100%;height:29px}.chart-title strong{font-size:14px}}
+    .settings-dialog{width:min(440px,calc(100vw - 28px));padding:0;border:1px solid #3a4e5c;border-radius:12px;background:#17222d;color:#e9f2f6;box-shadow:0 24px 80px #000b}.settings-dialog::backdrop{background:#03070bcc}.settings-dialog form{padding:20px}.settings-head{display:flex;align-items:start;justify-content:space-between;margin-bottom:18px}.settings-head h2{margin:4px 0 0;font-size:22px}.settings-head button{border:1px solid #3a4e5c;border-radius:6px;background:#22303b;color:#e9f2f6;padding:6px 9px}.settings-option{display:flex;align-items:start;gap:11px;padding:11px 3px;border-top:1px solid #2e3c48;cursor:pointer}.settings-option input{accent-color:#39d2a8;margin:3px 0 0}.settings-option strong{display:block;font-size:13px}.settings-option small{display:block;color:#9aafba;font-size:11px;line-height:1.5;margin-top:2px}.settings-label{padding:17px 3px 8px;color:#91a7b5;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}.settings-note{font-size:11px;line-height:1.55;color:#a1b2bd;margin:14px 0 17px}.settings-actions{display:flex;justify-content:flex-end}.settings-actions button{border:0;border-radius:7px;padding:10px 15px;background:#2b8d70;color:#f3fff9;font-size:12px;font-weight:700}.settings-actions button:hover{background:#36aa87}
+    /* Refined light workspace */
+    :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:#20242b;background:#f4f6f8;-webkit-font-smoothing:antialiased;--blue:#2878df;--green:#13866a;--red:#c85952;--muted:#778391}
+    button:active{transform:scale(.98)}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+    .app{height:100dvh;min-height:0;background:linear-gradient(145deg,#f8f9fb,#f0f3f7)}.main{width:100%;height:100%;background:transparent}
+    .topbar{position:relative;z-index:2;height:78px;padding:0 22px;background:#ffffffc7;backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border:0;box-shadow:0 1px 0 #dce3e94d,0 10px 28px #7890a70a}
+    .topbar h2{margin:1px 0 0;color:#1b222b;font-size:20px;font-weight:700;line-height:1.05;letter-spacing:-.045em}.kicker{color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.01em;line-height:1.25}.top-left{display:flex;align-items:center;gap:14px}.top-actions{gap:9px}
+    .mobile-menu,.close-menu,.toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:36px;border:1px solid #e2e8ee;border-radius:10px;background:#ffffffd9;color:#394b5d;box-shadow:0 1px 2px #2937460a;transition:background .16s,box-shadow .16s,transform .12s}.mobile-menu,.close-menu{width:38px;flex:none;font-size:17px}.toggle{padding:0 13px;font-size:11px;font-weight:650;white-space:nowrap}.toggle:hover,.mobile-menu:hover,.close-menu:hover{background:#fff;box-shadow:0 3px 12px #4060801a}
+    .chart-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:14px;padding:17px}.panel{min-width:0;border:1px solid #e6ebf0;border-radius:16px;background:#fff;box-shadow:0 1px 2px #23354a0a,0 14px 40px #647b940b}.panel.focused{border-color:#8bbaf1;box-shadow:0 0 0 3px #3184ea15,0 14px 40px #647b940b}
+    .panel-head{min-height:73px;padding:10px 15px;gap:14px;border-bottom:1px solid #edf0f3}.chart-id{gap:11px}.number{width:35px;height:35px;border-radius:11px;background:#edf4ff;color:#2e79d8;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}.panel:nth-child(2) .number{background:#f2effe;color:#7864c9}.chart-title{gap:11px;align-items:baseline;margin-top:2px}.chart-title strong{color:#1b2530;font-size:20px;font-weight:720;letter-spacing:-.035em}.chart-title small{color:var(--muted);font-size:11px;font-weight:620;font-variant-numeric:tabular-nums}.positive{color:var(--green)!important}.negative{color:var(--red)!important}
+    .symbol-form{width:190px;height:35px;flex:none;border:1px solid #e3e9ef;border-radius:9px;background:#f7f9fb;transition:border-color .15s,background .15s}.symbol-form:focus-within{border-color:#8bbaf1;background:#fff}.symbol-form input{font-size:12px;font-weight:700;color:#253345}.symbol-form input::placeholder{color:#a1aeb9;font-weight:500}.symbol-form button{background:#e8f1ff;color:#206fd3;font-size:11px;font-weight:700}.symbol-form button:hover{background:#d9e9ff}.chart-content,.tv-host{background:#fff}.tv-credit{height:23px;padding:0 13px;color:#98a5b1;font-size:10px}.tv-credit a{color:#8191a2}.tv-credit a:hover{color:var(--blue)}.tv-host .tradingview-widget-container__widget{height:calc(100% - 23px)}
+    .sidebar{width:min(380px,calc(100vw - 22px));border-right:1px solid #e0e6eb;border-radius:0 19px 19px 0;background:#fbfcfdf5;backdrop-filter:blur(30px) saturate(140%);-webkit-backdrop-filter:blur(30px) saturate(140%);box-shadow:20px 0 70px #19324b27;transform:translateX(calc(-100% - 20px));transition:transform .35s cubic-bezier(.2,.85,.2,1)}.sidebar.open{transform:translateX(0)}.sidebar-backdrop{display:block;opacity:0;visibility:hidden;background:#14233159;transition:opacity .25s,visibility .25s}.sidebar-backdrop.open{opacity:1;visibility:visible}
+    .brand{height:77px;padding:0 22px;border-bottom:1px solid #e6ebef}.mark{width:34px;height:34px;border-radius:10px;background:#2d80e7;box-shadow:0 6px 18px #2675d62b}.mark i{background:#fff}.brand-name{color:#1b2631;font-size:17px;line-height:1.2;letter-spacing:-.035em}.brand-sub{margin-top:2px;color:#8795a2;font-size:10px;letter-spacing:0;font-weight:500}.close-menu{margin-left:auto}
+    .sidebar-top{padding:23px 20px 10px}.sidebar-top h1{margin:4px 0 13px;color:#1d2732;font-size:26px;font-weight:730;line-height:1.1;letter-spacing:-.045em}.demo-pill{min-height:35px;padding:6px 11px;border:0;border-radius:10px;background:#eef5ff;color:#477caf;font-size:11px;font-weight:600}.demo-pill:before{width:7px;height:7px;background:#76a9e5;box-shadow:0 0 0 3px #76a9e522}
+    .candidate-section{padding:9px 18px 14px;border-bottom:1px solid #e8ecf0}.section-heading{margin:0 3px 9px}.section-heading h2{margin:3px 0 0;color:#26313d;font-size:15px;font-weight:700;letter-spacing:-.025em}.section-heading small{color:#9aa7b3;font-size:10px;font-weight:620}.symbol-shape{font-size:9px;margin-right:7px}.strong-color{color:#25a076}.weak-color{color:#d5796b}.candidate-stack{gap:5px}.candidate{min-height:49px;height:auto;padding:6px 11px;border:1px solid #e9eff0;border-radius:10px;background:#f5faf8;color:#263942}.candidate:hover{background:#eaf5f0;border-color:#d5e9e1}.candidate.weak{border-color:#f2e9e8;background:#fdf7f6}.candidate.weak:hover{background:#f9eeec;border-color:#ead7d4}.candidate .rank{width:25px;color:#6a9e8b;font-size:10px}.candidate.weak .rank{color:#c6928b}.candidate .candidate-label{font-size:12px;font-weight:750}.candidate .candidate-label small,.candidate .metric small{color:#96a3ac;font-size:10px}.candidate .metric{color:var(--green);font-size:11px}.candidate.weak .metric{color:var(--red)}
+    .watch-head{padding:15px 21px 6px}.watch-head h2{color:#26313d;font-size:15px;font-weight:700}.watch-head h2 span{background:#edf1f5;color:#748391}.watch-head>span{color:#9aa7b3;font-size:10px;font-weight:620;letter-spacing:0}.filter-wrap{padding:0 17px 7px}.filter-wrap input{height:35px;border:1px solid #e4eaf0;border-radius:9px;background:#f7f9fb;color:#253345;font-size:11px}.filter-wrap input:focus{border-color:#8bbaf1}.filter-wrap input::placeholder{color:#a1aeb9}.watchlist{padding:0 11px 10px;scrollbar-color:#cbd5df transparent}.stock{min-height:51px;padding:5px 10px;border-radius:10px;color:#26313c}.stock:hover{background:#f0f4f8;border-color:transparent}.stock.current{background:#edf4ff;border-color:transparent}.stock-logo{width:25px;height:25px;border-radius:8px;background:#e8edf3;color:#6a7f93}.stock-name{font-size:12px;font-weight:720}.badge{border-radius:5px}.badge.strong{background:#dff4e9;color:#248c64}.badge.weak{background:#f9e8e5;color:#cb7164}.stock-right{font-variant-numeric:tabular-nums}.stock-right b{font-size:11px;font-weight:690}.stock-right small{font-size:10px;font-weight:680}.sidebar-foot{border-top:1px solid #e8ecf0;color:#9ba7b1;font-size:9px}
+    .settings-dialog{width:min(430px,calc(100vw - 28px));border:1px solid #e5ebf0;border-radius:18px;background:#fff;color:#25303a;box-shadow:0 25px 80px #182c3e38}.settings-dialog::backdrop{background:#1a2a3999;backdrop-filter:blur(5px)}.settings-dialog form{padding:23px}.settings-head{margin-bottom:20px}.settings-head h2{margin:3px 0 0;font-size:23px;letter-spacing:-.04em}.settings-head button{border:1px solid #e2e8ee;border-radius:10px;background:#fff;color:#394b5d;padding:7px 10px}.settings-option{padding:12px 3px;border-color:#ecf0f3}.settings-option input{width:16px;height:16px;margin:2px 0 0;accent-color:var(--blue)}.settings-option strong{color:#25303a;font-size:13px;font-weight:670}.settings-option small{display:flex;align-items:center;gap:6px;color:#8a98a5;font-size:11px}.study-swatch{display:inline-block;width:16px;height:3px;border-radius:2px}.study-swatch.vwap{background:#f5b927}.study-swatch.ema{background:#3488f6}.settings-label{color:#8695a2;text-transform:none;letter-spacing:.02em}.settings-note{color:#8494a0}.settings-actions button{border-radius:9px;background:var(--blue)}.settings-actions button:hover{background:#176ace}
+    @media(max-width:1120px){.panel-head{min-height:103px;flex-direction:column;align-items:stretch;justify-content:center;gap:7px}.symbol-form{width:100%}.chart-title small{display:none}}
+    @media(max-width:700px){.topbar{height:65px;padding:0 11px}.top-left{gap:8px}.topbar h2{font-size:17px}.topbar .kicker{font-size:9px}.top-actions .toggle{width:34px;height:34px;padding:0;font-size:17px}.top-actions .toggle span{display:none}.chart-grid{gap:7px;padding:8px}.panel{border-radius:12px}.panel-head{min-height:103px;padding:8px}.number{width:27px;height:27px;border-radius:8px}.chart-id{gap:6px}.chart-title{gap:5px}.chart-title strong{font-size:15px}.symbol-form{height:31px}.symbol-form button{padding:0 6px;font-size:10px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
+    @media(prefers-reduced-transparency:reduce){.topbar,.sidebar{backdrop-filter:none;-webkit-backdrop-filter:none;background:#fff}}
+    @media(prefers-contrast:more){.panel,.candidate,.symbol-form,.toggle,.mobile-menu,.close-menu{border-color:#586675}.kicker,.chart-title small,.watch-head>span{color:#4e5c68}}
+    :root[data-theme="dark"]{color-scheme:dark;color:#e8edf4;background:#0d1118;--blue:#68a7ff;--green:#54c6a0;--red:#ef8b84;--muted:#94a1b1}
+    [data-theme="dark"] .main{background:linear-gradient(145deg,#121923,#0d1118)}
+    [data-theme="dark"] .topbar{background:rgba(24,31,41,.86);box-shadow:0 1px 0 #34415388,0 10px 28px #05090d33}
+    [data-theme="dark"] .topbar h2,[data-theme="dark"] .chart-title strong,[data-theme="dark"] .brand-name,[data-theme="dark"] .sidebar-top h1,[data-theme="dark"] .section-heading h2,[data-theme="dark"] .watch-head h2,[data-theme="dark"] .settings-option strong{color:#edf3f9}
+    [data-theme="dark"] .brand-sub,[data-theme="dark"] .candidate-label small,[data-theme="dark"] .metric small,[data-theme="dark"] .settings-option small,[data-theme="dark"] .settings-note,[data-theme="dark"] .sidebar-foot{color:#929faf}
+    [data-theme="dark"] .mobile-menu,[data-theme="dark"] .close-menu,[data-theme="dark"] .toggle{border-color:#394555;background:#222c39;color:#d6e0eb;box-shadow:none}
+    [data-theme="dark"] .mobile-menu:hover,[data-theme="dark"] .close-menu:hover,[data-theme="dark"] .toggle:hover{background:#2d3948;box-shadow:0 3px 12px #0004}
+    [data-theme="dark"] .panel{border-color:#2b3644;background:#171d27;box-shadow:0 1px 2px #0003,0 14px 40px #0002}
+    [data-theme="dark"] .panel.focused,[data-theme="dark"] .panel:focus-within{border-color:#568ad2;box-shadow:0 0 0 3px #568ad222}
+    [data-theme="dark"] .panel-head{border-bottom-color:#2b3644}
+    [data-theme="dark"] .number{background:#1c3453;color:#8bbcff}
+    [data-theme="dark"] .panel:nth-child(2) .number{background:#302c4b;color:#baa8ff}
+    [data-theme="dark"] .symbol-form{border-color:#3a4654;background:#202936}
+    [data-theme="dark"] .symbol-form:focus-within{border-color:#689ee7;background:#263344}
+    [data-theme="dark"] .symbol-form input{color:#ecf3fb}
+    [data-theme="dark"] .symbol-form input::placeholder{color:#8795a5}
+    [data-theme="dark"] .symbol-form button{background:#243b59;color:#9ac4ff}
+    [data-theme="dark"] .symbol-form button:hover{background:#2d4b70}
+    [data-theme="dark"] .chart-content{background:#171d27}
+    [data-theme="dark"] .tv-credit,[data-theme="dark"] .tv-credit a{color:#a7b5c6}
+    [data-theme="dark"] .sidebar{border-right-color:#364252;background:rgba(22,29,39,.97);box-shadow:20px 0 70px #0008}
+    [data-theme="dark"] .sidebar-backdrop{background:#04080cc2}
+    [data-theme="dark"] .brand,[data-theme="dark"] .candidate-section,[data-theme="dark"] .sidebar-foot{border-color:#303b49}
+    [data-theme="dark"] .demo-pill{background:#193c35;color:#7bd9b8}
+    [data-theme="dark"] .candidate{border-color:#2a4942;background:#1b342e;color:#e1eee9}
+    [data-theme="dark"] .candidate:hover{background:#234239}
+    [data-theme="dark"] .candidate.weak{border-color:#503b3c;background:#382b30;color:#f1e4e6}
+    [data-theme="dark"] .candidate.weak:hover{background:#473439}
+    [data-theme="dark"] .candidate .rank{color:#88cbb3}
+    [data-theme="dark"] .candidate.weak .rank{color:#e3a19a}
+    [data-theme="dark"] .watch-head h2 span{background:#2b3745;color:#aab8c7}
+    [data-theme="dark"] .filter-wrap input{border-color:#3a4654;background:#202936;color:#ecf3fb}
+    [data-theme="dark"] .filter-wrap input::placeholder{color:#8795a5}
+    [data-theme="dark"] .watchlist{scrollbar-color:#405064 transparent}
+    [data-theme="dark"] .stock{color:#dce5ef}
+    [data-theme="dark"] .stock:hover{background:#273342}
+    [data-theme="dark"] .stock.current{background:#223b5b}
+    [data-theme="dark"] .stock-logo{background:#2e3a49;color:#b3c5d6}
+    [data-theme="dark"] .badge.strong{background:#214937;color:#87d9aa}
+    [data-theme="dark"] .badge.weak{background:#513432;color:#f3a49a}
+    [data-theme="dark"] .settings-dialog{border-color:#3d4b5b;background:#1b2531;color:#e8edf4;box-shadow:0 25px 80px #0009}
+    [data-theme="dark"] .settings-option{border-color:#334152}
+    [data-theme="dark"] .settings-label{color:#9baabc}
+    [data-theme="dark"] .settings-actions button{background:#347bd3}
+    @media(prefers-reduced-transparency:reduce){[data-theme="dark"] .topbar,[data-theme="dark"] .sidebar{background:#1a232e}}
+    @media(prefers-contrast:more){[data-theme="dark"] .panel,[data-theme="dark"] .candidate,[data-theme="dark"] .symbol-form,[data-theme="dark"] .toggle,[data-theme="dark"] .mobile-menu,[data-theme="dark"] .close-menu{border-color:#9dafc3}[data-theme="dark"] .kicker,[data-theme="dark"] .chart-title small,[data-theme="dark"] .watch-head>span{color:#b8c7d7}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="mark" aria-hidden="true"><i></i><i></i><i></i></div><div><div class="brand-name">MarketLens</div><span class="brand-sub">Your market workspace</span></div><button class="close-menu" id="close-menu" aria-label="Close watchlist">×</button></div>
+      <div class="sidebar-top"><span class="kicker">Live monitor</span><h1>Watchlist</h1><div class="demo-pill">Illustrative watchlist data</div></div>
+      <div id="candidates"></div>
+      <div class="watch-head"><div><span class="kicker">Tracking</span><h2>All symbols <span>21</span></h2></div><span>Change % ↓</span></div>
+      <div class="filter-wrap"><input id="filter" type="search" placeholder="Filter ticker…" aria-label="Filter watchlist"></div>
+      <div class="watchlist" id="watchlist"></div>
+      <div class="sidebar-foot">Prices and rankings are illustrative. No live quote feed.<br>TradingView widgets require an internet connection.</div>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+    <main class="main">
+      <header class="topbar"><div class="top-left"><button class="mobile-menu" id="mobile-menu" aria-label="Open watchlist" aria-controls="sidebar" aria-expanded="false">☰</button><div><span class="kicker">Dual chart workspace</span><h2>MarketLens</h2></div></div><div class="top-actions"><button class="toggle" id="theme-toggle" type="button" aria-pressed="false"><span class="theme-icon" aria-hidden="true"></span><span class="theme-label"></span></button><button class="toggle" id="settings-button" type="button">⚙ <span>Chart settings</span></button></div></header>
+      <div class="chart-grid" id="chart-grid"></div>
+    </main>
+    <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title"><form id="settings-form" method="dialog"><div class="settings-head"><div><span class="kicker">TradingView defaults</span><h2 id="settings-title">Chart settings</h2></div><button type="button" id="settings-close" aria-label="Close chart settings">✕</button></div><label class="settings-option"><input type="checkbox" name="extendedHours"><span><strong>Extended hours</strong><small>Request premarket and after-hours bars when available.</small></span></label><div class="settings-label">Indicators to add to each new chart</div><label class="settings-option"><input type="checkbox" name="study" value="VWAP@tv-basicstudies"><span><strong>VWAP</strong></span></label><label class="settings-option"><input type="checkbox" name="study" value="MAExp@tv-basicstudies"><span><strong>8 EMA</strong><small><i class="study-swatch ema"></i>Blue · length 8</small></span></label><p class="settings-note">These defaults are reapplied when you switch tickers. Drawings and changes made inside TradingView cannot be saved here.</p><div class="settings-actions"><button type="submit">Save defaults</button></div></form></dialog>
+  </div>
+  <script>
+    const symbols = [
+      ['QQQ',716.92,2.28],['MSFT',497.75,1.63],['AAPL',337.00,1.16],['META',682.31,1.83],['GOOGL',347.33,3.48],
+      ['SPY',762.60,1.20],['PLTR',176.24,.89],['IWM',285.43,.66],['SBUX',96.67,-.54],['SHOP',128.60,-.79],
+      ['NFLX',75.31,-1.11],['SMCI',40.35,10.31],['ARM',264.90,11.23],['AMD',545.09,7.58],['COIN',173.97,9.29],
+      ['MU',977.50,6.89],['HOOD',109.81,8.77],['NVDA',219.34,3.50],['TSLA',366.20,3.02],['AMZN',251.19,2.58],['CRWD',245.70,1.70]
+    ].map(([ticker,price,change])=>({ticker,price,change}));
+    const byTicker = new Map(symbols.map(item=>[item.ticker,item]));
+    const strong = [{ticker:'COIN',score:88.2},{ticker:'HOOD',score:88.1},{ticker:'MU',score:84.7}];
+    const weak = [{ticker:'NFLX',score:77.8},{ticker:'SHOP',score:75.7},{ticker:'SBUX',score:71.4}];
+    const exchanges = {SPY:'AMEX',QQQ:'NASDAQ',IWM:'AMEX'};
+    const studyIds=['VWAP@tv-basicstudies','MAExp@tv-basicstudies'];
+    const defaultStudies=['VWAP@tv-basicstudies','MAExp@tv-basicstudies'];
+    const settingsKey='marketlens:chart-settings';
+    const themeKey='marketlens:theme';
+    let theme=localStorage.getItem(themeKey)==='light'?'light':'dark';
+    document.documentElement.dataset.theme=theme;
+    function loadSettings(){try{const saved=JSON.parse(localStorage.getItem(settingsKey)||'null');if(saved&&typeof saved==='object'){const previous=Array.isArray(saved.studies)?studyIds.filter(id=>saved.studies.includes(id)):defaultStudies;return{version:2,extendedHours:typeof saved.extendedHours==='boolean'?saved.extendedHours:true,studies:saved.version===2?previous:studyIds.filter(id=>[...previous,'MAExp@tv-basicstudies'].includes(id))}}}catch{}return{version:2,extendedHours:true,studies:defaultStudies}}
+    let chartSettings=loadSettings();
+    const state = {tickers:['SPY','QQQ'],active:0,filter:''};
+    const escapeHtml = value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const cash = value=>value==null?'—':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
+    const percent = value=>value==null?'—':`${value>0?'+':''}${value.toFixed(2)}%`;
+    function renderCandidates(){
+      document.querySelector('#candidates').innerHTML=[['Strong',strong],['Weak',weak]].map(([label,items])=>`<section class="candidate-section"><div class="section-heading"><div><span class="kicker">Top 3 candidates</span><h2><span class="symbol-shape ${label==='Strong'?'strong-color':'weak-color'}">●</span>${label}</h2></div><small>3/3</small></div><div class="candidate-stack">${items.map((item,i)=>`<button class="candidate ${label==='Weak'?'weak':''}" data-ticker="${item.ticker}" type="button" title="Load ${item.ticker} in selected chart"><span class="rank">0${i+1}</span><span class="candidate-label">${item.ticker}<small>Sample ${label.toLowerCase()} ranking</small></span><span class="metric">${percent(byTicker.get(item.ticker).change)}<small>Score ${item.score}</small></span></button>`).join('')}</div></section>`).join('');
+    }
+    function renderWatchlist(){
+      const found=symbols.filter(item=>item.ticker.includes(state.filter)).sort((a,b)=>b.change-a.change);
+      const strongSet=new Set(strong.map(x=>x.ticker)),weakSet=new Set(weak.map(x=>x.ticker));
+      document.querySelector('#watchlist').innerHTML=found.map(item=>`<button class="stock ${state.tickers.includes(item.ticker)?'current':''}" data-ticker="${item.ticker}" type="button" title="Load ${item.ticker} in selected chart"><span class="stock-left"><span class="stock-logo">${item.ticker[0]}</span><span class="stock-name">${item.ticker}</span>${strongSet.has(item.ticker)?'<span class="badge strong">S</span>':weakSet.has(item.ticker)?'<span class="badge weak">W</span>':''}</span><span class="stock-right"><b>${cash(item.price)}</b><small class="${item.change>=0?'positive':'negative'}">${percent(item.change)}</small></span></button>`).join('')||'<div style="padding:16px;color:#8da0b0;font-size:12px">No matching symbols</div>';
+    }
+    function renderCharts(changedIndex=null){
+      const panels=state.tickers.map((ticker,index)=>{
+        const item=byTicker.get(ticker);
+        return `<section class="panel ${state.active===index?'focused':''}" data-pane="${index}" aria-label="Chart ${index+1}"><div class="panel-head"><div class="chart-id"><span class="number">0${index+1}</span><div><span class="kicker">${index?'Right chart':'Left chart'}</span><div class="chart-title"><strong>${escapeHtml(ticker)}</strong><small class="${item?(item.change>=0?'positive':'negative'):''}">${item?`${cash(item.price)} · ${percent(item.change)}`:'Custom ticker'}</small></div></div></div><form class="symbol-form" data-pane="${index}"><input name="ticker" value="${escapeHtml(ticker)}" maxlength="15" autocomplete="off" spellcheck="false" aria-label="Ticker for chart ${index+1}" placeholder="Ticker"><button type="submit">Show ↗</button></form></div><div class="chart-content" id="content-${index}"><div class="tv-host"></div></div></section>`;
+      });
+      if(changedIndex===null){
+        document.querySelector('#chart-grid').innerHTML=panels.join('');
+        state.tickers.forEach((ticker,index)=>mountTradingView(ticker,index));
+      }else{
+        document.querySelector(`#chart-grid .panel[data-pane="${changedIndex}"]`).outerHTML=panels[changedIndex];
+        mountTradingView(state.tickers[changedIndex],changedIndex);
+      }
+    }
+    function mountTradingView(ticker,index){
+      const host=document.querySelector(`#content-${index} .tv-host`),container=document.createElement('div');
+      container.className='tradingview-widget-container';
+      const inner=document.createElement('div');inner.className='tradingview-widget-container__widget';
+      const credit=document.createElement('div');credit.className='tv-credit';
+      const link=document.createElement('a');link.href=`https://www.tradingview.com/symbols/${encodeURIComponent(ticker)}/`;link.target='_blank';link.rel='noopener noreferrer';link.textContent=`Open ${ticker} on TradingView ↗`;
+      credit.append(link);container.append(inner,credit);host.append(container);
+      const script=document.createElement('script');script.async=true;script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+      script.textContent=JSON.stringify({autosize:true,symbol:`${exchanges[ticker]?exchanges[ticker]+':':''}${ticker}`,interval:'5',timezone:'exchange',theme,style:'1',locale:'en',backgroundColor:theme==='dark'?'#171D27':'#FFFFFF',gridColor:theme==='dark'?'rgba(160,180,205,0.07)':'rgba(30,42,64,0.055)',hide_side_toolbar:false,hide_top_toolbar:false,allow_symbol_change:true,extended_hours:chartSettings.extendedHours,studies:chartSettings.studies.map(id=>id==='VWAP@tv-basicstudies'?{id}:id==='MAExp@tv-basicstudies'?{id,inputs:{length:8},styles:{plot:{color:'#3488F6',linewidth:2}}}:id),support_host:'https://www.tradingview.com'});
+      container.append(script);
+    }
+    function setTicker(ticker){
+      ticker=ticker.trim().toUpperCase();
+      if(!/^[A-Z0-9][A-Z0-9.-]{0,14}$/.test(ticker))return;
+      state.tickers[state.active]=ticker;renderCharts(state.active);renderWatchlist();
+      if(document.querySelector('#sidebar').classList.contains('open'))setSidebarOpen(false);
+    }
+    function setSidebarOpen(open){
+      document.querySelector('#sidebar').classList.toggle('open',open);
+      document.querySelector('#sidebar-backdrop').classList.toggle('open',open);
+      document.querySelector('#mobile-menu').setAttribute('aria-expanded',String(open));
+      document.querySelector('#sidebar').inert=!open;
+      (open?document.querySelector('#close-menu'):document.querySelector('#mobile-menu')).focus();
+    }
+    document.querySelector('#sidebar').addEventListener('click',event=>{const button=event.target.closest('[data-ticker]');if(button)setTicker(button.dataset.ticker)});
+    document.querySelector('#chart-grid').addEventListener('click',event=>{
+      const pane=event.target.closest('[data-pane]');if(pane&&pane.classList.contains('panel')){state.active=Number(pane.dataset.pane);document.querySelectorAll('.panel').forEach((panel,i)=>panel.classList.toggle('focused',i===state.active))}
+    });
+    document.querySelector('#chart-grid').addEventListener('focusin',event=>{const form=event.target.closest('.symbol-form');if(form){state.active=Number(form.dataset.pane);document.querySelectorAll('.panel').forEach((panel,i)=>panel.classList.toggle('focused',i===state.active))}});
+    document.querySelector('#chart-grid').addEventListener('submit',event=>{const form=event.target.closest('.symbol-form');if(!form)return;event.preventDefault();state.active=Number(form.dataset.pane);setTicker(form.elements.ticker.value)});
+    document.querySelector('#filter').addEventListener('input',event=>{state.filter=event.target.value.trim().toUpperCase();renderWatchlist()});
+    const settingsDialog=document.querySelector('#settings-dialog'),settingsForm=document.querySelector('#settings-form');
+    const themeToggle=document.querySelector('#theme-toggle');
+    function updateThemeToggle(){const light=theme==='light';themeToggle.setAttribute('aria-label',light?'Switch to dark mode':'Switch to light mode');themeToggle.setAttribute('aria-pressed',String(light));themeToggle.querySelector('.theme-icon').textContent=light?'☾':'☀';themeToggle.querySelector('.theme-label').textContent=light?'Dark mode':'Light mode'}
+    updateThemeToggle();
+    themeToggle.addEventListener('click',()=>{theme=theme==='dark'?'light':'dark';localStorage.setItem(themeKey,theme);document.documentElement.dataset.theme=theme;updateThemeToggle();renderCharts()});
+    document.querySelector('#settings-button').addEventListener('click',()=>{settingsForm.elements.extendedHours.checked=chartSettings.extendedHours;settingsForm.querySelectorAll('input[name="study"]').forEach(input=>input.checked=chartSettings.studies.includes(input.value));settingsDialog.showModal()});
+    document.querySelector('#settings-close').addEventListener('click',()=>settingsDialog.close());
+    settingsForm.addEventListener('submit',event=>{event.preventDefault();const next={version:2,extendedHours:settingsForm.elements.extendedHours.checked,studies:[...settingsForm.querySelectorAll('input[name="study"]:checked')].map(input=>input.value)};if(JSON.stringify(next)!==JSON.stringify(chartSettings)){chartSettings=next;localStorage.setItem(settingsKey,JSON.stringify(next));renderCharts()}settingsDialog.close()});
+    document.querySelector('#mobile-menu').addEventListener('click',()=>setSidebarOpen(true));
+    document.querySelector('#close-menu').addEventListener('click',()=>setSidebarOpen(false));
+    document.querySelector('#sidebar-backdrop').addEventListener('click',()=>setSidebarOpen(false));
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.querySelector('#sidebar').classList.contains('open'))setSidebarOpen(false)});
+    document.querySelector('#sidebar').inert=true;
+    renderCandidates();renderWatchlist();renderCharts();
+  </script>
+</body>
+</html>

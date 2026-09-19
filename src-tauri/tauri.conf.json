@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "MarketLens",
+  "version": "0.1.0",
+  "identifier": "com.marketlens.app",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [{ "title": "MarketLens", "width": 1440, "height": 900, "minWidth": 820, "minHeight": 600, "backgroundColor": "#0d1118" }],
+    "security": { "csp": null }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all"
+  }
+}
