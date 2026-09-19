@@ -1,50 +1,52 @@
 # MarketLens
 
-MarketLens は、Windows・macOS・Android 向けの Tauri 2 製株価ウォッチアプリです。TradingView のチャートを左右に2つ表示し、初期銘柄は SPY と QQQ、初期足種は5分足です。描画ツールから水平線などを引けます。ハンバーガーメニューでウォッチリストを開き、各チャート上部のティッカー入力欄またはリストの銘柄を選んで表示を切り替えます。
+**English** | [日本語](README.ja.md) | [简体中文](README.zh-CN.md)
 
-## HTML デモ
+MarketLens is a Tauri 2 stock watch app for Windows, macOS, and Android. It displays two TradingView charts side by side, with SPY and QQQ and five-minute candles as the defaults. The drawing toolbar supports horizontal lines and other annotations. Open the watchlist with the hamburger menu, then change either chart by entering a ticker above it or selecting a symbol from the list.
 
-[demo.html](demo.html) をブラウザで開くと、ビルドせずに画面を確認できます。ウォッチリストの並べ替え、候補銘柄の表示、ティッカー入力、サイドバーの開閉、テーマ切替を試せます。デモの株価と候補スコアは表示例です。TradingView チャートの読み込みにはインターネット接続が必要で、ブラウザ環境によっては埋め込みが制限される場合があります。
+## HTML demo
 
-## 主な機能
+Open [demo.html](demo.html) in a browser to explore the interface without a build. You can try watchlist sorting, candidate cards, ticker inputs, the watchlist drawer, and theme switching. Prices and candidate scores in the demo are illustrative. TradingView charts require an internet connection and may be restricted by some browser environments.
 
-- 添付画像にあった21銘柄を、前日終値に対する変動率の高い順に表示
-- ウォッチリストにティッカー、株価、変動率を表示
-- 添付の PBInvesting ロジック資料を基に、強い候補と弱い候補を各3銘柄表示
-- 独立した2つの TradingView チャート、ティッカーの保存、手動更新、2分ごとの株価更新
-- ダークモードを初期表示とし、ライトモードへの切替結果を端末に保存
-- Chart settings で時間外取引、VWAP、8 EMA の初期設定を保存し、銘柄変更時に再適用
+## Features
 
-## 開発環境で起動
+- The 21 symbols in the supplied screenshots, sorted by percentage change from the previous close.
+- Ticker, current price, and percentage change in the watchlist.
+- Three strong and three weak candidates based on the supplied PBInvesting logic brief.
+- Two independent TradingView charts, saved ticker choices, manual refresh, and automatic quote refresh every two minutes.
+- Dark theme by default, with a saved light/dark preference.
+- Chart settings for extended hours, VWAP, and 8 EMA, reapplied when a ticker changes.
 
-[Rust](https://www.rust-lang.org/tools/install)、[Tauri の前提条件](https://tauri.app/start/prerequisites/)、[pnpm](https://pnpm.io/installation)をインストールし、プロジェクトのルートで実行します。
+## Run locally
+
+Install [Rust](https://www.rust-lang.org/tools/install), the [Tauri prerequisites](https://tauri.app/start/prerequisites/), and [pnpm](https://pnpm.io/installation). Then run these commands from the project root:
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm tauri dev
 ```
 
-Windows・macOS・Android のビルド方法、必要なツール、生成物の場所は [BUILDING.md](BUILDING.md) に記載しています。`pnpm dev` はブラウザでフロントエンドを確認するためのコマンドです。開発時は Vite のプロキシ、Tauri アプリでは Rust 側の処理で株価を取得します。
+Platform-specific prerequisites, build commands, and output locations are documented in [BUILDING.md](BUILDING.md) (Japanese). `pnpm dev` opens the frontend in a browser. In development, a Vite proxy fetches quotes; the packaged Tauri app fetches them through Rust.
 
-## 株価データと候補の順位付け
+## Quotes and candidate ranking
 
-チャートは TradingView の埋め込みウィジェットを使用します。サイドバーの株価は、時間外取引を含む Yahoo Finance の公開チャートエンドポイントから1分足データを別途取得します。このエンドポイントは非公式で、データの遅延、アクセス制限、取得失敗が起こり得ます。価格が取得できない場合は架空の数値で補わず、取得できない状態を表示します。株価と候補の計算に使う取引時間帯が異なる場合もあります。
+TradingView supplies the embedded charts. The sidebar separately requests one-minute data, including extended hours, from the public Yahoo Finance chart endpoint. This endpoint is unofficial; quotes may be delayed, rate limited, or unavailable. When a price cannot be fetched, the app shows it as unavailable rather than substituting a fabricated value. Quotes and candidate calculations may use different session prices outside regular trading hours.
 
-候補の暫定スコアは QQQ を基準とし、QQQ・SPY・IWM を候補から除外します。通常取引では、始値からの相対騰落率（45%）、直近5分の相対騰落率（30%）、終値から近似した VWAP との位置関係（15%）、直近の出来高とそれ以前の20本との比較（10%）を使用します。プレマーケットでは前日終値からのギャップを基準に、相対ギャップ（70%）と直近の相対モメンタム（30%）を使用します。候補の入れ替えには、新しい銘柄が既存候補を5点以上上回る状態が2回連続で必要です。これらは実装上の推定値であり、価格予測や売買シグナルではありません。
+The provisional candidate score uses QQQ as a benchmark and excludes QQQ, SPY, and IWM from candidate rankings. During regular trading it combines relative return from the session's first bar (45%), relative five-minute return (30%), position against an approximate close-price VWAP (15%), and recent volume compared with the preceding 20 bars (10%). In premarket it uses the previous close, relative gap (70%), and recent relative momentum (30%). A challenger must exceed an incumbent's score by at least five points on two consecutive refreshes before replacing it. These are implementation estimates, not price predictions or trading signals.
 
-資料にある PMH/PML、より厳密な相対出来高、流動性フィルターはこの MVP には実装していません。実運用には信頼できる日中の分足データの提供元が必要です。
+PMH/PML, a more rigorous relative-volume measure, and liquidity filters from the brief are not implemented in this MVP. Production use would require a dependable intraday data provider.
 
-## TradingView ウィジェットの制約
+## TradingView widget limitations
 
-無料の埋め込みウィジェットからは、TradingView 内で作成した描画やインジケーターの詳細なレイアウトをアプリ側で保存・復元できません。テーマや銘柄の切替時にチャートを読み直すため、ウィジェット内の変更は保持されません。完全なレイアウト保存には TradingView Advanced Charts ライブラリの利用権と、別途データフィードおよび保存先が必要です。
+The free embedded widget does not expose its complete layout to MarketLens. Drawings and indicator changes made inside TradingView cannot be saved or restored by this app. Switching themes or tickers reloads a chart, so those changes are lost. Full layout persistence would require access to the TradingView Advanced Charts library, plus a separate datafeed and storage integration.
 
-8 EMA の期間指定は反映されますが、無料ウィジェットではインジケーターの色指定が安定して反映されません。そのため、VWAP の黄色はアプリ側の初期設定として保証できていません。また、TradingView 内部の銘柄選択は MarketLens のサイドバーとは連動しません。
+The 8 EMA length setting is applied, but the free widget does not reliably honor per-indicator color overrides. MarketLens therefore cannot guarantee a yellow VWAP by default. TradingView's internal symbol picker also does not control the MarketLens sidebar.
 
-## ディレクトリ構成
+## Project layout
 
-- `src/main.ts`：画面、チャート、株価更新
-- `src/market.ts`：騰落率、VWAP、候補スコアの計算
-- `src-tauri/src/lib.rs`：株価データの取得と整形
-- `src/style.css`：デスクトップとモバイルの表示
-- `demo.html`：単体で開ける HTML デモ
-- `BUILDING.md`：プラットフォーム別のビルド手順
+- `src/main.ts`: UI, charts, and quote refresh
+- `src/market.ts`: percentage change, VWAP, and candidate scoring
+- `src-tauri/src/lib.rs`: quote retrieval and normalization
+- `src/style.css`: desktop and mobile layout
+- `demo.html`: standalone HTML demo
+- `BUILDING.md`: platform-specific build guide (Japanese)
