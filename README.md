@@ -26,7 +26,7 @@ pnpm install --frozen-lockfile
 pnpm tauri dev
 ```
 
-Platform-specific prerequisites, build commands, and output locations are documented in [BUILDING.md](BUILDING.md) (Japanese). `pnpm dev` opens the frontend in a browser. In development, a Vite proxy fetches quotes; the packaged Tauri app fetches them through Rust.
+Platform-specific prerequisites, build commands, and output locations are documented in the [build guide](BUILDING.md). `pnpm dev` opens the frontend in a browser. In development, a Vite proxy fetches quotes; the packaged Tauri app fetches them through Rust.
 
 ## Quotes and candidate ranking
 
@@ -49,4 +49,4 @@ The 8 EMA length setting is applied, but the free widget does not reliably honor
 - `src-tauri/src/lib.rs`: quote retrieval and normalization
 - `src/style.css`: desktop and mobile layout
 - `demo.html`: standalone HTML demo
-- `BUILDING.md`: platform-specific build guide (Japanese)
+- `BUILDING.md`: platform-specific build guide

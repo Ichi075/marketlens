@@ -26,7 +26,7 @@ pnpm install --frozen-lockfile
 pnpm tauri dev
 ```
 
-Windows・macOS・Android のビルド方法、必要なツール、生成物の場所は [BUILDING.md](BUILDING.md) に記載しています。`pnpm dev` はブラウザでフロントエンドを確認するためのコマンドです。開発時は Vite のプロキシ、Tauri アプリでは Rust 側の処理で株価を取得します。
+Windows・macOS・Android のビルド方法、必要なツール、生成物の場所は[ビルド手順](BUILDING.ja.md)に記載しています。`pnpm dev` はブラウザでフロントエンドを確認するためのコマンドです。開発時は Vite のプロキシ、Tauri アプリでは Rust 側の処理で株価を取得します。
 
 ## 株価データと候補の順位付け
 
@@ -49,4 +49,4 @@ Windows・macOS・Android のビルド方法、必要なツール、生成物の
 - `src-tauri/src/lib.rs`：株価データの取得と整形
 - `src/style.css`：デスクトップとモバイルの表示
 - `demo.html`：単体で開ける HTML デモ
-- `BUILDING.md`：プラットフォーム別のビルド手順
+- `BUILDING.ja.md`：プラットフォーム別のビルド手順

@@ -26,7 +26,7 @@ pnpm install --frozen-lockfile
 pnpm tauri dev
 ```
 
-各平台的依赖、构建命令和产物位置见 [BUILDING.md](BUILDING.md)（日文）。`pnpm dev` 可在浏览器中打开前端。开发模式通过 Vite 代理获取报价；打包后的 Tauri 应用通过 Rust 获取报价。
+各平台的依赖、构建命令和产物位置见[构建指南](BUILDING.zh-CN.md)。`pnpm dev` 可在浏览器中打开前端。开发模式通过 Vite 代理获取报价；打包后的 Tauri 应用通过 Rust 获取报价。
 
 ## 报价与候选股排序
 
@@ -49,4 +49,4 @@ pnpm tauri dev
 - `src-tauri/src/lib.rs`：报价获取与数据整理
 - `src/style.css`：桌面与移动端布局
 - `demo.html`：独立 HTML 演示
-- `BUILDING.md`：各平台构建指南（日文）
+- `BUILDING.zh-CN.md`：各平台构建指南

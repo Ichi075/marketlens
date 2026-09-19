@@ -1,55 +1,59 @@
-# MarketLens のビルド手順
+# Building MarketLens
 
-このリポジトリは Tauri 2、Rust、Vite、pnpm を使用します。Windows のインストーラーは Windows、macOS の DMG は Mac でビルドしてください。Android は Windows または Mac からビルドできます。以下のコマンドはリポジトリのルートで実行します。
+**English** | [日本語](BUILDING.ja.md) | [简体中文](BUILDING.zh-CN.md)
 
-## 共通の準備
+[← Back to README](README.md)
 
-1. [Node.js LTS](https://nodejs.org/) と [pnpm](https://pnpm.io/installation) をインストールします。
-2. [Rust](https://www.rust-lang.org/tools/install) をインストールします。
-3. OS に対応する [Tauri 2 の前提条件](https://tauri.app/start/prerequisites/) を満たします。
-4. 依存パッケージを取得し、フロントエンドのテストを実行します。
+This repository uses Tauri 2, Rust, Vite, and pnpm. Build the Windows installer on Windows and the macOS DMG on a Mac. Android builds can be made on Windows or macOS. Run the commands below from the repository root.
+
+## Common setup
+
+1. Install [Node.js LTS](https://nodejs.org/) and [pnpm](https://pnpm.io/installation).
+2. Install [Rust](https://www.rust-lang.org/tools/install).
+3. Complete the [Tauri 2 prerequisites](https://tauri.app/start/prerequisites/) for your operating system.
+4. Install the project's dependencies and run the frontend tests:
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm test
 ```
 
-`pnpm build` はフロントエンドのみのビルドです。インストール可能なアプリを作るには以下の `pnpm tauri ... build` を実行してください。
+`pnpm build` builds only the frontend. Use the `pnpm tauri ... build` commands below to create installable apps.
 
 ## Windows
 
-Microsoft C++ Build Tools の **Desktop development with C++** と Microsoft Edge WebView2 Runtime が必要です。Rust は MSVC ツールチェーンを使用します。[Windows の前提条件](https://tauri.app/start/prerequisites/#windows)を確認してください。
+Install Microsoft C++ Build Tools with **Desktop development with C++** and the Microsoft Edge WebView2 Runtime. Use the MSVC Rust toolchain. See the [Windows prerequisites](https://tauri.app/start/prerequisites/#windows).
 
-PowerShell で NSIS セットアップファイルを作ります。
+In PowerShell, build an NSIS setup executable:
 
 ```powershell
 pnpm install --frozen-lockfile
 pnpm tauri build --bundles nsis
 ```
 
-生成物は `src-tauri/target/release/bundle/nsis/` にあります。MSI が必要な場合は `pnpm tauri build --bundles msi` を実行します。MSI の作成には Windows の VBSCRIPT オプション機能が必要になる場合があります。配布時の署名については [Tauri の Windows 署名ガイド](https://tauri.app/distribute/sign/windows/)を参照してください。
+The installer is created in `src-tauri/target/release/bundle/nsis/`. For an MSI, run `pnpm tauri build --bundles msi` instead. MSI builds may require the Windows VBSCRIPT optional feature. See [Windows code signing](https://tauri.app/distribute/sign/windows/) before distributing a signed installer.
 
 ## macOS
 
-Mac 上で Xcode Command Line Tools（`xcode-select --install`）、Rust、Node.js、pnpm を準備します。DMG を作るには次を実行します。
+On a Mac, install Xcode Command Line Tools (`xcode-select --install`), Rust, Node.js, and pnpm. Build a DMG:
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm tauri build --bundles dmg
 ```
 
-生成物は `src-tauri/target/release/bundle/dmg/` にあります。通常はビルドした Mac の CPU 向けです。Apple Silicon と Intel の両方に対応する単一のアプリが必要な場合は、両方の Rust ターゲットを追加してから universal ターゲットを指定します。
+The DMG is created in `src-tauri/target/release/bundle/dmg/`. By default, it targets the architecture of the build machine. To create one app for both Apple Silicon and Intel, install both Rust targets and specify the universal target:
 
 ```sh
 rustup target add aarch64-apple-darwin x86_64-apple-darwin
 pnpm tauri build --bundles dmg --target universal-apple-darwin
 ```
 
-外部配布には Apple のコード署名と公証が必要です。[Tauri の macOS 署名ガイド](https://tauri.app/distribute/sign/macos/)を参照してください。
+Distribution outside the App Store requires Apple code signing and notarization. See [macOS code signing](https://tauri.app/distribute/sign/macos/).
 
 ## Android
 
-[Tauri の Android 前提条件](https://tauri.app/start/prerequisites/#android)に従って Android Studio、Android SDK Platform / Platform-Tools / Build-Tools / Command-line Tools、NDK (Side by side)、Java を準備します。`JAVA_HOME`、`ANDROID_HOME`、`NDK_HOME` を設定し、ビルドする ABI の Rust ターゲットを追加してください。一般的な実機向けの例は次のとおりです。
+Follow the [Android prerequisites](https://tauri.app/start/prerequisites/#android) to install Android Studio, Android SDK Platform, Platform-Tools, Build-Tools, Command-line Tools, the side-by-side NDK, and Java. Set `JAVA_HOME`, `ANDROID_HOME`, and `NDK_HOME`, then add the Rust targets for the ABIs you plan to build. This example targets common physical devices:
 
 ```sh
 rustup target add aarch64-linux-android armv7-linux-androideabi
@@ -58,16 +62,16 @@ pnpm tauri android init
 pnpm tauri android build --apk --target aarch64 --target armv7
 ```
 
-`android init` は各作業環境で一度だけ実行します。生成される `src-tauri/gen/android/` は `.gitignore` に含めています。APK は `src-tauri/gen/android/app/build/outputs/apk/` 以下に生成されます。ABI を指定しない場合は、対応する全ターゲットをビルドします。
+Run `android init` once per development environment. The generated `src-tauri/gen/android/` directory is ignored by Git. APKs appear under `src-tauri/gen/android/app/build/outputs/apk/`. Without target flags, Tauri builds all supported ABIs.
 
-Google Play 向けの AAB は次のコマンドで作ります。
+To create an AAB for Google Play with the same ARM targets, run:
 
 ```sh
-pnpm tauri android build --aab
+pnpm tauri android build --aab --target aarch64 --target armv7
 ```
 
-AAB の生成先は `src-tauri/gen/android/app/build/outputs/bundle/universalRelease/` です。Play ストアに提出するには、別途アップロード鍵による[Android アプリの署名](https://tauri.app/distribute/sign/android/)と Play Console の設定が必要です。署名鍵やパスワードをリポジトリに追加しないでください。
+The AAB appears in `src-tauri/gen/android/app/build/outputs/bundle/universalRelease/`. Play Store submission additionally requires an upload key, [Android app signing](https://tauri.app/distribute/sign/android/), and Play Console setup. Never commit signing keys or passwords to this repository.
 
-## 注意
+## Notes
 
-この手順はビルド方法の記載です。現時点で Windows、macOS、Android のネイティブパッケージをすべて実機検証したことは意味しません。チャートと株価にはネット接続が必要です。TradingView の埋め込みチャート設定やデータ配信の制約は [README](README.md) を参照してください。
+These are build instructions, not a claim that native packages have been tested on all three platforms. Charts and quotes require an internet connection. See the [README](README.md) for TradingView widget and data-provider limitations.
