@@ -216,3 +216,11 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
   [data-theme="dark"] .eyebrow, [data-theme="dark"] .chart-change,
   [data-theme="dark"] .sort-label { color: #b8c7d7; }
 }
+.ticker-logo { position: relative; display: grid; place-items: center; flex: none; width: 25px; height: 25px; overflow: hidden; border: 1px solid #dce4ec; border-radius: 8px; background: #fff; color: #62758a; font-size: 11px; font-weight: 750; }
+.ticker-logo img { position: absolute; inset: 0; width: 100%; height: 100%; padding: 3px; object-fit: contain; background: #fff; }
+.chart-number.ticker-logo { width: 35px; height: 35px; border-radius: 11px; font-size: 14px; }
+.chart-number.ticker-logo img { padding: 5px; }
+.candidate-mark { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+.candidate-mark .rank { width: 14px; }
+[data-theme="dark"] .ticker-logo { border-color: #435263; background: #fff; color: #52677b; }
+@media (max-width: 700px) { .chart-number.ticker-logo { width: 27px; height: 27px; border-radius: 8px; } }

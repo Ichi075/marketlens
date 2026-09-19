@@ -56,6 +56,22 @@ let rankingSession = ''
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 })[character]!)
+const logoDomains: Record<string, string> = {
+  QQQ: 'invesco.com', MSFT: 'microsoft.com', AAPL: 'apple.com', META: 'meta.com', GOOGL: 'google.com',
+  SPY: 'ssga.com', PLTR: 'palantir.com', IWM: 'ishares.com', SBUX: 'starbucks.com', SHOP: 'shopify.com',
+  NFLX: 'netflix.com', SMCI: 'supermicro.com', ARM: 'arm.com', AMD: 'amd.com', COIN: 'coinbase.com',
+  MU: 'micron.com', HOOD: 'robinhood.com', NVDA: 'nvidia.com', TSLA: 'tesla.com', AMZN: 'amazon.com',
+  CRWD: 'crowdstrike.com',
+}
+function logoMarkup(ticker: string, className = ''): string {
+  const domain = logoDomains[ticker]
+  return `<span class="ticker-logo ${className}" aria-hidden="true"><span class="logo-fallback">${escapeHtml(ticker.slice(0, 1))}</span>${domain
+    ? `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="" loading="lazy" referrerpolicy="no-referrer">`
+    : ''}</span>`
+}
+document.addEventListener('error', event => {
+  if (event.target instanceof HTMLImageElement && event.target.closest('.ticker-logo')) event.target.remove()
+}, true)
 const percent = (value: number | null, signed = true) => value == null ? '—'
   : `${signed && value > 0 ? '+' : ''}${value.toFixed(2)}%`
 const price = (item?: MarketData) => item?.price == null ? '—'
@@ -81,7 +97,7 @@ app.innerHTML = `
     <main class="workspace">
       <header class="topbar"><div class="topbar-left"><button id="open-sidebar" class="icon-button" aria-label="Open watchlist" aria-expanded="false" aria-controls="sidebar">☰</button><div><span class="eyebrow">Dual chart workspace</span><h2>MarketLens</h2></div></div><div class="topbar-right"><span id="updated-at">Waiting for quotes</span><button id="theme-toggle" class="refresh-button" type="button" aria-pressed="false"><span class="theme-icon" aria-hidden="true"></span><span class="theme-label"></span></button><button id="chart-settings-button" class="refresh-button" type="button">⚙ <span>Chart settings</span></button><button id="refresh" class="refresh-button" type="button" aria-label="Refresh quotes"><span class="refresh-icon">↻</span><span>Refresh</span></button></div></header>
       <div class="charts">
-        ${[0, 1].map(index => `<section class="chart-panel" id="pane-${index}" aria-label="Chart ${index + 1}"><div class="chart-header"><div class="chart-identity"><span class="chart-number">0${index + 1}</span><div><span class="eyebrow">${index === 0 ? 'Left chart' : 'Right chart'}</span><div class="chart-heading"><strong id="title-${index}"></strong><span id="change-${index}" class="chart-change"></span></div></div></div><form class="symbol-form" data-pane="${index}"><label class="sr-only" for="ticker-${index}">Ticker for chart ${index + 1}</label><span class="search-glyph">⌕</span><input id="ticker-${index}" name="ticker" autocomplete="off" spellcheck="false" maxlength="15" placeholder="Ticker" value="${tickers[index]}" /><button type="submit">Show ↗</button></form></div><div class="chart-body" id="chart-${index}"></div></section>`).join('')}
+        ${[0, 1].map(index => `<section class="chart-panel" id="pane-${index}" aria-label="Chart ${index + 1}"><div class="chart-header"><div class="chart-identity">${logoMarkup(tickers[index], 'chart-number')}<div><span class="eyebrow">${index === 0 ? 'Left chart' : 'Right chart'}</span><div class="chart-heading"><strong id="title-${index}"></strong><span id="change-${index}" class="chart-change"></span></div></div></div><form class="symbol-form" data-pane="${index}"><label class="sr-only" for="ticker-${index}">Ticker for chart ${index + 1}</label><span class="search-glyph">⌕</span><input id="ticker-${index}" name="ticker" autocomplete="off" spellcheck="false" maxlength="15" placeholder="Ticker" value="${tickers[index]}" /><button type="submit">Show ↗</button></form></div><div class="chart-body" id="chart-${index}"></div></section>`).join('')}
       </div>
     </main>
     <dialog id="chart-settings-dialog" class="chart-settings-dialog" aria-labelledby="chart-settings-title">
@@ -144,6 +160,7 @@ function mountChart(pane: Pane) {
     calendar: false, support_host: 'https://www.tradingview.com',
   })
   widget.append(script)
+  document.querySelector<HTMLElement>(`#pane-${pane} .chart-number`)!.outerHTML = logoMarkup(ticker, 'chart-number')
   document.querySelector<HTMLElement>(`#title-${pane}`)!.textContent = ticker
   document.querySelector<HTMLInputElement>(`#ticker-${pane}`)!.value = ticker
   updateChartQuote(pane)
@@ -160,7 +177,7 @@ function updateChartQuote(pane: Pane) {
 function candidateCard(candidate: Candidate, kind: 'strong' | 'weak', rank: number): string {
   const item = quotes.get(candidate.symbol)
   const reason = `${candidate.symbol}: score ${candidate.score.toFixed(1)}, QQQ relative ${percent(candidate.relativePerformance)}, 5 min ${percent(candidate.momentum)}, VWAP ${candidate.aboveVwap == null ? 'unavailable' : candidate.aboveVwap ? 'above' : 'below'}`
-  return `<button class="candidate-card ${kind}" data-symbol="${candidate.symbol}" type="button" title="${escapeHtml(reason)}"><span class="rank">0${rank}</span><span class="candidate-name">${candidate.symbol}<small>${kind === 'strong' ? 'Relative strength' : 'Relative weakness'}</small></span><span class="candidate-values"><strong>${percent(item ? changePercent(item) : null)}</strong><small>Score ${candidate.score.toFixed(1)}</small></span></button>`
+  return `<button class="candidate-card ${kind}" data-symbol="${candidate.symbol}" type="button" title="${escapeHtml(reason)}"><span class="candidate-mark">${logoMarkup(candidate.symbol)}<span class="rank">0${rank}</span></span><span class="candidate-name">${candidate.symbol}<small>${kind === 'strong' ? 'Relative strength' : 'Relative weakness'}</small></span><span class="candidate-values"><strong>${percent(item ? changePercent(item) : null)}</strong><small>Score ${candidate.score.toFixed(1)}</small></span></button>`
 }
 
 function renderCandidates() {
@@ -188,7 +205,7 @@ function renderWatchlist() {
     const tone = change == null ? 'muted' : change >= 0 ? 'positive' : 'negative'
     const badge = strong.has(symbol) ? '<span class="row-badge strong">S</span>'
       : weak.has(symbol) ? '<span class="row-badge weak">W</span>' : ''
-    return `<button class="stock-row ${tickers.includes(symbol) ? 'on-chart' : ''}" data-symbol="${symbol}" type="button" title="Show ${symbol} in selected chart"><span class="stock-symbol"><span class="symbol-dot">${symbol.slice(0, 1)}</span><strong>${symbol}</strong>${badge}</span><span class="stock-values"><strong>${price(item)}</strong><small class="${tone}">${percent(change)}</small></span></button>`
+    return `<button class="stock-row ${tickers.includes(symbol) ? 'on-chart' : ''}" data-symbol="${symbol}" type="button" title="Show ${symbol} in selected chart"><span class="stock-symbol">${logoMarkup(symbol, 'symbol-dot')}<strong>${symbol}</strong>${badge}</span><span class="stock-values"><strong>${price(item)}</strong><small class="${tone}">${percent(change)}</small></span></button>`
   }).join('')
 }
 
