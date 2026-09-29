@@ -80,7 +80,11 @@ for (const expected of [
 ]) {
   assert.ok(androidPrepare.includes(expected), `Android activity preparation is missing ${expected}`);
 }
-assert.match(style, /grid-template-rows:\s*repeat\(2,minmax\(0,1fr\)\)/);
+assert.ok(style.includes('.platform-android .workspace'));
+assert.ok(style.includes('.platform-android .sidebar'));
+assert.ok(main.includes("const isAndroid = /Android/i.test(navigator.userAgent)"));
+assert.ok(main.includes('if (!isAndroid) mountBothCharts()'));
+assert.ok(main.includes("document.querySelector<HTMLElement>('#sidebar')!.inert = !isAndroid"));
 assert.ok(main.includes('hide_top_toolbar: compact'));
 assert.ok(main.includes("if (!document.hidden) void refreshQuotes('active')"));
 

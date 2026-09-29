@@ -4,7 +4,7 @@
 
 [English](README.md) | **日本語** | [简体中文](README.zh-CN.md)
 
-MarketLens は、Windows・macOS・Android 向けの Tauri 2 製株価ウォッチアプリです。TradingView のチャートを左右に2つ表示し、初期銘柄は SPY と QQQ、初期足種は5分足です。描画ツールから水平線などを引けます。ハンバーガーメニューでウォッチリストを開き、各チャート上部のティッカー入力欄またはリストの銘柄を選んで表示を切り替えます。
+MarketLens は、Windows・macOS・Android 向けの Tauri 2 製株価ウォッチアプリです。Windows と macOS では TradingView のチャートを左右に2つ表示し、初期銘柄は SPY と QQQ、初期足種は5分足です。Android は株価一覧、ランキング、セットアップ、通知に絞った軽量なモニター画面で、TradingView チャートを読み込みません。
 
 ## HTML デモ
 
@@ -17,8 +17,8 @@ MarketLens は、Windows・macOS・Android 向けの Tauri 2 製株価ウォッ�
 - 添付の PB Investing ロジック資料を基に、強い候補と弱い候補を各3銘柄表示
 - 重要レベル突破、確定5分足、リテスト、反応までCALL / PUTセットアップを自動監視
 - 状態履歴付きのActive Setupカード、`SETUP_READY`初回のみのOS通知、Paper Modeへの仮想エントリー保存
-- 独立した2つの TradingView チャート、ティッカーの保存、手動更新、二段階の株価更新
-- モバイルではチャートを上下に配置し、Androidではシステムバーを一時表示式にした没入型フルスクリーン
+- Windows・macOS向けの独立した2つの TradingView チャート、ティッカーの保存、手動更新、二段階の株価更新
+- Androidではウォッチリストを全画面のメイン画面として表示し、TradingViewを読み込まないことでWebViewと通信の負荷を軽減
 - ダークモードを初期表示とし、ライトモードへの切替結果を端末に保存
 - Chart settings で時間外取引、VWAP、8 EMA の初期設定を保存し、銘柄変更時に再適用
 

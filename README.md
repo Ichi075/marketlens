@@ -4,7 +4,7 @@
 
 **English** | [日本語](README.ja.md) | [简体中文](README.zh-CN.md)
 
-MarketLens is a Tauri 2 stock watch app for Windows, macOS, and Android. It displays two TradingView charts side by side, with SPY and QQQ and five-minute candles as the defaults. The drawing toolbar supports horizontal lines and other annotations. Open the watchlist with the hamburger menu, then change either chart by entering a ticker above it or selecting a symbol from the list.
+MarketLens is a Tauri 2 stock watch app for Windows, macOS, and Android. Windows and macOS display two TradingView charts side by side, with SPY and QQQ and five-minute candles as the defaults. The drawing toolbar supports horizontal lines and other annotations. Android uses a lightweight monitor-only screen for quotes, rankings, setups, and notifications without loading TradingView charts.
 
 ## HTML demo
 
@@ -17,8 +17,8 @@ Open [demo.html](demo.html) in a browser to explore the interface without a buil
 - Three strong and three weak candidates based on the supplied PB Investing logic brief.
 - Automatic CALL/PUT setup monitoring through level break, completed five-minute confirmation, retest, and reaction.
 - Active Setup cards with a state timeline, one-time OS notification at `SETUP_READY`, and a local Paper Mode entry record.
-- Two independent TradingView charts, saved ticker choices, manual refresh, and tiered quote refresh.
-- Mobile charts use a compact top/bottom layout; Android uses immersive full screen with transient system bars.
+- Two independent TradingView charts on Windows and macOS, saved ticker choices, manual refresh, and tiered quote refresh.
+- Android uses the watchlist as its full-screen main view and does not load TradingView, reducing WebView and network load.
 - Dark theme by default, with a saved light/dark preference.
 - Chart settings for extended hours, VWAP, and 8 EMA, reapplied when a ticker changes.
 

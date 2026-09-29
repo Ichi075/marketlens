@@ -4,7 +4,7 @@
 
 [English](README.md) | [日本語](README.ja.md) | **简体中文**
 
-MarketLens 是一款基于 Tauri 2 的股票行情应用，支持 Windows、macOS 和 Android。界面并排显示两张 TradingView 图表，默认标的为 SPY 和 QQQ，默认周期为 5 分钟。绘图工具栏可用于添加水平线等标注。通过汉堡菜单打开自选股列表，在图表上方输入股票代码或点击列表中的股票，即可切换图表。
+MarketLens 是一款基于 Tauri 2 的股票行情应用，支持 Windows、macOS 和 Android。Windows 和 macOS 并排显示两张 TradingView 图表，默认标的为 SPY 和 QQQ，默认周期为 5 分钟。Android 使用轻量监控界面显示报价、排名、Setup 和通知，不加载 TradingView 图表。
 
 ## HTML 演示
 
@@ -17,7 +17,8 @@ MarketLens 是一款基于 Tauri 2 的股票行情应用，支持 Windows、macO
 - 根据所提供的 PB Investing 逻辑说明，分别展示 3 只强势候选股和 3 只弱势候选股。
 - 自动监控重要价位突破、已完成的5分钟K线确认、回测和方向反应。
 - Active Setup状态时间线、仅在首次进入`SETUP_READY`时发送的系统通知，以及本地Paper Mode记录。
-- 两张独立的 TradingView 图表、保存所选代码、手动刷新和分层报价刷新。
+- Windows 和 macOS 提供两张独立的 TradingView 图表、保存所选代码、手动刷新和分层报价刷新。
+- Android 将自选股列表作为全屏主界面，不加载 TradingView，以减少 WebView 与网络负载。
 - 默认使用深色主题，并保存浅色／深色主题偏好。
 - 保存盘前盘后时段、VWAP 和 8 EMA 的图表设置，并在切换股票时重新应用。
 

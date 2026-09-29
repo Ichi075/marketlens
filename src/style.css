@@ -75,6 +75,7 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .brand small { display: block; margin-top: 2px; color: #8795a2; font-size: 10px; }
 .side-head { display: flex; align-items: center; justify-content: space-between; padding: 23px 20px 11px; }
 .side-head h1 { margin: 4px 0 0; color: #1d2732; font-size: 26px; font-weight: 730; line-height: 1.1; letter-spacing: -.045em; }
+.monitor-actions { display: none; align-items: center; gap: 7px; }
 .market-status { display: flex; align-items: center; gap: 8px; min-height: 35px; margin: 0 18px 15px; padding: 6px 11px; border-radius: 10px; background: #eef8f4; color: #37876e; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; }
 .market-status.status-error { background: #fff1ee; color: #b86b5f; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #50b18c; box-shadow: 0 0 0 3px #50b18c22; flex: none; }
@@ -117,7 +118,7 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .setup-card.put { border-left-color: #d46f68; }
 .setup-card.ready { border-color: #e1bd5a; border-left-color: #e1a91b; background: #fff9e9; box-shadow: 0 5px 18px #d8a32c18; }
 .setup-card.terminal { opacity: .62; }
-.setup-card > button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 9px 5px; border: 0; background: transparent; color: inherit; text-align: left; }
+.setup-card > button, .setup-card > .setup-summary { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 9px 5px; border: 0; background: transparent; color: inherit; text-align: left; }
 .setup-symbol { display: flex; align-items: center; gap: 8px; }.setup-symbol strong { display: block; font-size: 12px; }.setup-symbol small { display: block; margin-top: 1px; color: #8996a3; font-size: 9px; }
 .setup-state { padding: 4px 6px; border-radius: 6px; background: #e6f4ef; color: #247b61; font-size: 9px; font-weight: 750; text-transform: uppercase; }
 .put .setup-state { background: #faeae8; color: #b85c55; }.ready .setup-state { background: #f6d875; color: #69500a; }
@@ -248,3 +249,19 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
   .chart-panel, [data-theme="dark"] .chart-panel { box-shadow: none; }
   .chart-body { contain: layout paint; }
 }
+.platform-android .workspace, .platform-android .sidebar-backdrop,
+.platform-android #close-sidebar, .platform-android .desktop-only { display: none; }
+.platform-android .sidebar {
+  position: relative; inset: auto; width: 100%; max-width: none; height: 100%;
+  padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+  border: 0; border-radius: 0; box-shadow: none; transform: none; transition: none;
+}
+.platform-android .brand { height: 63px; padding: 0 18px; }
+.platform-android .side-head { padding: 17px 18px 11px; }
+.platform-android .side-head h1 { font-size: 24px; }
+.platform-android .monitor-actions { display: flex; }
+.platform-android .monitor-actions .refresh-button { width: 36px; padding: 0; }
+.platform-android .monitor-actions .refresh-button > span:last-child { display: none; }
+.platform-android .candidate-card, .platform-android .stock-row { cursor: default; }
+.platform-android .candidate-card:hover, .platform-android .candidate-card.weak:hover,
+.platform-android .stock-row:hover { transform: none; }

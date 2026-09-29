@@ -20,6 +20,8 @@ const THEME_KEY = 'marketlens:theme'
 type Theme = 'dark' | 'light'
 let theme: Theme = localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark'
 document.documentElement.dataset.theme = theme
+const isAndroid = /Android/i.test(navigator.userAgent)
+document.documentElement.classList.toggle('platform-android', isAndroid)
 function loadChartSettings(): ChartSettings {
   try {
     const saved: unknown = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null')
@@ -95,18 +97,18 @@ const timeEt = (timestamp: number) => new Intl.DateTimeFormat('en-US', {
 app.innerHTML = `
   <div class="shell">
     <aside class="sidebar" id="sidebar">
-      <div class="brand"><div class="brand-mark"><span></span><span></span><span></span></div><div><strong>MarketLens</strong><small>Your market workspace</small></div></div>
-      <div class="side-head"><div><span class="eyebrow">Live monitor</span><h1>Watchlist</h1></div><button id="close-sidebar" class="icon-button" aria-label="Close watchlist">✕</button></div>
+      <div class="brand"><div class="brand-mark"><span></span><span></span><span></span></div><div><strong>MarketLens</strong><small>${isAndroid ? 'Market monitor' : 'Your market workspace'}</small></div></div>
+      <div class="side-head"><div><span class="eyebrow">Live monitor</span><h1>Watchlist</h1></div><div class="monitor-actions"><button class="refresh-button" type="button" data-theme-toggle aria-pressed="false"><span class="theme-icon" aria-hidden="true"></span><span class="theme-label"></span></button><button class="refresh-button" type="button" data-refresh aria-label="Refresh quotes"><span class="refresh-icon">↻</span><span>Refresh</span></button></div><button id="close-sidebar" class="icon-button" aria-label="Close watchlist">✕</button></div>
       <div class="market-status" id="market-status"><span class="status-dot"></span><span>Loading market data…</span></div>
       <div id="candidate-sections"></div>
       <section class="active-setups"><div class="section-title"><div><span class="eyebrow">Entry monitor</span><h2><span class="section-spark setup">●</span>Active setups</h2></div><span class="section-count" id="setup-count">0</span></div><div id="active-setups-list" class="setup-list"></div></section>
       <div class="list-title"><div><span class="eyebrow">Tracking</span><h2>All symbols <span>${WATCHLIST.length}</span></h2></div><span class="sort-label">Change % ↓</span></div>
       <div id="watchlist" class="watchlist" aria-live="polite"></div>
-      <div class="side-footer">Quotes: Yahoo Finance chart endpoint<br>Charts: TradingView · Data may be delayed</div>
+      <div class="side-footer">Quotes: Yahoo Finance chart endpoint<span class="desktop-only"><br>Charts: TradingView</span> · Data may be delayed</div>
     </aside>
     <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
     <main class="workspace">
-      <header class="topbar"><div class="topbar-left"><button id="open-sidebar" class="icon-button" aria-label="Open watchlist" aria-expanded="false" aria-controls="sidebar">☰</button><div><span class="eyebrow">Dual chart workspace</span><h2>MarketLens</h2></div></div><div class="topbar-right"><span id="updated-at">Waiting for quotes</span><button id="theme-toggle" class="refresh-button" type="button" aria-pressed="false"><span class="theme-icon" aria-hidden="true"></span><span class="theme-label"></span></button><button id="chart-settings-button" class="refresh-button" type="button">⚙ <span>Chart settings</span></button><button id="refresh" class="refresh-button" type="button" aria-label="Refresh quotes"><span class="refresh-icon">↻</span><span>Refresh</span></button></div></header>
+      <header class="topbar"><div class="topbar-left"><button id="open-sidebar" class="icon-button" aria-label="Open watchlist" aria-expanded="false" aria-controls="sidebar">☰</button><div><span class="eyebrow">Dual chart workspace</span><h2>MarketLens</h2></div></div><div class="topbar-right"><span id="updated-at">Waiting for quotes</span><button id="theme-toggle" class="refresh-button" type="button" data-theme-toggle aria-pressed="false"><span class="theme-icon" aria-hidden="true"></span><span class="theme-label"></span></button><button id="chart-settings-button" class="refresh-button" type="button">⚙ <span>Chart settings</span></button><button id="refresh" class="refresh-button" type="button" data-refresh aria-label="Refresh quotes"><span class="refresh-icon">↻</span><span>Refresh</span></button></div></header>
       <div class="charts">
         ${[0, 1].map(index => `<section class="chart-panel" id="pane-${index}" aria-label="Chart ${index + 1}"><div class="chart-header"><div class="chart-identity">${logoMarkup(tickers[index], 'chart-number')}<div><span class="eyebrow">${index === 0 ? 'Left chart' : 'Right chart'}</span><div class="chart-heading"><strong id="title-${index}"></strong><span id="change-${index}" class="chart-change"></span></div></div></div><form class="symbol-form" data-pane="${index}"><label class="sr-only" for="ticker-${index}">Ticker for chart ${index + 1}</label><span class="search-glyph">⌕</span><input id="ticker-${index}" name="ticker" autocomplete="off" spellcheck="false" maxlength="15" placeholder="Ticker" value="${tickers[index]}" /><button type="submit">Show ↗</button></form></div><div class="chart-body" id="chart-${index}"></div></section>`).join('')}
       </div>
@@ -202,7 +204,9 @@ function updateChartQuote(pane: Pane) {
 function candidateCard(candidate: Candidate, kind: 'strong' | 'weak', rank: number): string {
   const item = quotes.get(candidate.symbol)
   const reason = `${candidate.symbol}: score ${candidate.score.toFixed(1)}, QQQ relative ${percent(candidate.relativePerformance)}, 5 min ${percent(candidate.momentum)}, VWAP ${candidate.aboveVwap == null ? 'unavailable' : candidate.aboveVwap ? 'above' : 'below'}`
-  return `<button class="candidate-card ${kind}" data-symbol="${candidate.symbol}" type="button" title="${escapeHtml(reason)}"><span class="candidate-mark">${logoMarkup(candidate.symbol)}<span class="rank">0${rank}</span></span><span class="candidate-name">${candidate.symbol}<small>${kind === 'strong' ? 'Relative strength' : 'Relative weakness'}</small></span><span class="candidate-values"><strong>${percent(item ? changePercent(item) : null)}</strong><small>Score ${candidate.score.toFixed(1)}</small></span></button>`
+  const tag = isAndroid ? 'article' : 'button'
+  const action = isAndroid ? '' : ` data-symbol="${candidate.symbol}" type="button"`
+  return `<${tag} class="candidate-card ${kind}"${action} title="${escapeHtml(reason)}"><span class="candidate-mark">${logoMarkup(candidate.symbol)}<span class="rank">0${rank}</span></span><span class="candidate-name">${candidate.symbol}<small>${kind === 'strong' ? 'Relative strength' : 'Relative weakness'}</small></span><span class="candidate-values"><strong>${percent(item ? changePercent(item) : null)}</strong><small>Score ${candidate.score.toFixed(1)}</small></span></${tag}>`
 }
 
 function renderCandidates() {
@@ -229,7 +233,9 @@ function renderSetups() {
     const tone = setup.direction === 'CALL' ? 'call' : 'put'
     const timeline = setup.events.slice(-6).map(event => `<li><time>${timeEt(event.timestamp).replace(' ET', '')}</time>${escapeHtml(event.message)}</li>`).join('')
     const terminal = ['INVALIDATED', 'EXPIRED'].includes(setup.state) ? 'terminal' : ''
-    return `<article class="setup-card ${tone} ${setup.state === 'SETUP_READY' ? 'ready' : ''} ${terminal}"><button type="button" data-symbol="${setup.symbol}" title="Show ${setup.symbol} in selected chart"><span class="setup-symbol">${logoMarkup(setup.symbol)}<span><strong>${setup.symbol}</strong><small>${setup.direction} · ${setup.levelType}</small></span></span><span class="setup-state">${setupLabels[setup.state]}</span></button><div class="setup-level">${escapeHtml(setup.reasons[0])} · ${setup.levelType} ${price({ price: setup.levelPrice, currency: 'USD' } as MarketData)}${setup.vwap == null ? '' : ` · VWAP ${price({ price: setup.vwap, currency: 'USD' } as MarketData)}`}</div><div class="setup-metrics">RS ${percent(setup.relativePerformance)} · 5m ${percent(setup.momentum)} · RVOL ${setup.volumeRatio == null ? '—' : `${setup.volumeRatio.toFixed(1)}x`}</div><details><summary>Timeline</summary><ol>${timeline}</ol></details></article>`
+    const summaryTag = isAndroid ? 'div' : 'button'
+    const action = isAndroid ? ' class="setup-summary"' : ` type="button" data-symbol="${setup.symbol}" title="Show ${setup.symbol} in selected chart"`
+    return `<article class="setup-card ${tone} ${setup.state === 'SETUP_READY' ? 'ready' : ''} ${terminal}"><${summaryTag}${action}><span class="setup-symbol">${logoMarkup(setup.symbol)}<span><strong>${setup.symbol}</strong><small>${setup.direction} · ${setup.levelType}</small></span></span><span class="setup-state">${setupLabels[setup.state]}</span></${summaryTag}><div class="setup-level">${escapeHtml(setup.reasons[0])} · ${setup.levelType} ${price({ price: setup.levelPrice, currency: 'USD' } as MarketData)}${setup.vwap == null ? '' : ` · VWAP ${price({ price: setup.vwap, currency: 'USD' } as MarketData)}`}</div><div class="setup-metrics">RS ${percent(setup.relativePerformance)} · 5m ${percent(setup.momentum)} · RVOL ${setup.volumeRatio == null ? '—' : `${setup.volumeRatio.toFixed(1)}x`}</div><details><summary>Timeline</summary><ol>${timeline}</ol></details></article>`
   }).join('') : '<div class="empty-candidates">Waiting for ranked candidates and market levels</div>'
 }
 
@@ -247,7 +253,9 @@ function renderWatchlist() {
     const tone = change == null ? 'muted' : change >= 0 ? 'positive' : 'negative'
     const badge = strong.has(symbol) ? '<span class="row-badge strong">S</span>'
       : weak.has(symbol) ? '<span class="row-badge weak">W</span>' : ''
-    return `<button class="stock-row ${tickers.includes(symbol) ? 'on-chart' : ''}" data-symbol="${symbol}" type="button" title="Show ${symbol} in selected chart"><span class="stock-symbol">${logoMarkup(symbol, 'symbol-dot')}<strong>${symbol}</strong>${badge}</span><span class="stock-values"><strong>${price(item)}</strong><small class="${tone}">${percent(change)}</small></span></button>`
+    const tag = isAndroid ? 'div' : 'button'
+    const action = isAndroid ? '' : ` data-symbol="${symbol}" type="button" title="Show ${symbol} in selected chart"`
+    return `<${tag} class="stock-row ${!isAndroid && tickers.includes(symbol) ? 'on-chart' : ''}"${action}><span class="stock-symbol">${logoMarkup(symbol, 'symbol-dot')}<strong>${symbol}</strong>${badge}</span><span class="stock-values"><strong>${price(item)}</strong><small class="${tone}">${percent(change)}</small></span></${tag}>`
   }).join('')
 }
 
@@ -257,12 +265,13 @@ function renderStatus() {
   status.className = `market-status ${fetchError || count === 0 ? 'status-error' : ''}`
   status.innerHTML = `<span class="status-dot"></span><span>${escapeHtml(loading ? 'Updating quotes…'
     : fetchError ? fetchError : count ? `${ranking?.stage ?? 'Quotes'} · ${count}/${WATCHLIST.length} symbols` : 'Quotes unavailable')}</span>`
-  document.querySelector<HTMLElement>('#updated-at')!.textContent = ranking?.updatedAt
+  const updatedAt = ranking?.updatedAt
     ? `Market as of ${timeEt(ranking.updatedAt)}`
     : lastFetch
     ? `Checked ${lastFetch.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
     : 'Waiting for quotes'
-  document.querySelector<HTMLButtonElement>('#refresh')!.disabled = loading
+  document.querySelector<HTMLElement>('#updated-at')!.textContent = updatedAt
+  document.querySelectorAll<HTMLButtonElement>('[data-refresh]').forEach(button => { button.disabled = loading })
 }
 
 function setSidebarOpen(open: boolean) {
@@ -274,6 +283,7 @@ function setSidebarOpen(open: boolean) {
 }
 
 function setTicker(pane: Pane, raw: string) {
+  if (isAndroid) return
   const ticker = raw.trim().toUpperCase()
   if (!validTicker(ticker)) {
     const input = document.querySelector<HTMLInputElement>(`#ticker-${pane}`)!
@@ -361,8 +371,10 @@ async function refreshQuotes(scope: 'full' | 'active' = 'full') {
     renderCandidates()
     renderSetups()
     renderWatchlist()
-    updateChartQuote(0)
-    updateChartQuote(1)
+    if (!isAndroid) {
+      updateChartQuote(0)
+      updateChartQuote(1)
+    }
     if (pendingRefresh) {
       pendingRefresh = false
       queueMicrotask(() => void refreshQuotes())
@@ -380,24 +392,30 @@ document.querySelectorAll<HTMLFormElement>('.symbol-form').forEach(form => {
 })
 document.querySelector('#sidebar')?.addEventListener('click', event => {
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-symbol]')
-  if (button?.dataset.symbol) setTicker(focused, button.dataset.symbol)
+  if (!isAndroid && button?.dataset.symbol) setTicker(focused, button.dataset.symbol)
 })
-document.querySelector('#refresh')?.addEventListener('click', () => void refreshQuotes())
-const themeToggle = document.querySelector<HTMLButtonElement>('#theme-toggle')!
+document.querySelectorAll<HTMLButtonElement>('[data-refresh]').forEach(button => {
+  button.addEventListener('click', () => void refreshQuotes())
+})
+const themeToggles = document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]')
 function updateThemeToggle() {
   const light = theme === 'light'
-  themeToggle.setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode')
-  themeToggle.setAttribute('aria-pressed', String(light))
-  themeToggle.querySelector<HTMLElement>('.theme-icon')!.textContent = light ? '☾' : '☀'
-  themeToggle.querySelector<HTMLElement>('.theme-label')!.textContent = light ? 'Dark mode' : 'Light mode'
+  themeToggles.forEach(themeToggle => {
+    themeToggle.setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode')
+    themeToggle.setAttribute('aria-pressed', String(light))
+    themeToggle.querySelector<HTMLElement>('.theme-icon')!.textContent = light ? '☾' : '☀'
+    themeToggle.querySelector<HTMLElement>('.theme-label')!.textContent = light ? 'Dark mode' : 'Light mode'
+  })
 }
 updateThemeToggle()
-themeToggle.addEventListener('click', () => {
-  theme = theme === 'dark' ? 'light' : 'dark'
-  localStorage.setItem(THEME_KEY, theme)
-  document.documentElement.dataset.theme = theme
-  updateThemeToggle()
-  mountBothCharts()
+themeToggles.forEach(themeToggle => {
+  themeToggle.addEventListener('click', () => {
+    theme = theme === 'dark' ? 'light' : 'dark'
+    localStorage.setItem(THEME_KEY, theme)
+    document.documentElement.dataset.theme = theme
+    updateThemeToggle()
+    if (!isAndroid) mountBothCharts()
+  })
 })
 const settingsDialog = document.querySelector<HTMLDialogElement>('#chart-settings-dialog')!
 const settingsForm = document.querySelector<HTMLFormElement>('#chart-settings-form')!
@@ -419,7 +437,7 @@ settingsForm.addEventListener('submit', event => {
   if (JSON.stringify(next) !== JSON.stringify(chartSettings)) {
     chartSettings = next
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(next))
-    mountBothCharts()
+    if (!isAndroid) mountBothCharts()
   }
   settingsDialog.close()
 })
@@ -435,12 +453,12 @@ document.querySelectorAll<HTMLElement>('.chart-panel').forEach((panel, index) =>
   panel.addEventListener('pointerdown', () => { focused = index as Pane })
 })
 
-mountBothCharts()
-document.querySelector<HTMLElement>('#sidebar')!.inert = true
+if (!isAndroid) mountBothCharts()
+document.querySelector<HTMLElement>('#sidebar')!.inert = !isAndroid
 renderCandidates()
 renderSetups()
 renderWatchlist()
-window.setTimeout(() => void refreshQuotes(), compactViewport.matches ? 650 : 0)
+window.setTimeout(() => void refreshQuotes(), isAndroid ? 0 : compactViewport.matches ? 650 : 0)
 window.setInterval(() => { if (!document.hidden) void refreshQuotes('full') }, marketConfig.fullWatchlistRefreshMs)
 window.setInterval(() => { if (!document.hidden) void refreshQuotes('active') }, marketConfig.activeSetupRefreshMs)
 document.addEventListener('visibilitychange', () => {
