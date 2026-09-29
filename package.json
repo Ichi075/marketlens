@@ -6,14 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "test": "node scripts/market.test.mjs && node scripts/check_demo.mjs",
+    "test": "node scripts/market.test.mjs && node scripts/setup.test.mjs && node scripts/check_demo.mjs",
     "preview": "vite preview",
     "tauri": "tauri",
     "desktop": "tauri dev",
     "android": "tauri android dev"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.0.0"
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-notification": "^2.5.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.0.0",

@@ -14,8 +14,12 @@ export default defineConfig({
       '/api/chart': {
         target: 'https://query1.finance.yahoo.com',
         changeOrigin: true,
-        rewrite: path => path.replace(/^\/api\/chart/, '/v8/finance/chart') +
-          '?interval=1m&range=1d&includePrePost=true',
+        rewrite: path => {
+          const [pathname, query = ''] = path.split('?')
+          const range = new URLSearchParams(query).get('range') === '5d' ? '5d' : '1d'
+          return pathname.replace(/^\/api\/chart/, '/v8/finance/chart') +
+            `?interval=1m&range=${range}&includePrePost=true`
+        },
       },
     },
   },

@@ -1,9 +1,11 @@
+import { marketConfig } from './config.ts'
+
 export const WATCHLIST = [
   'QQQ', 'MSFT', 'AAPL', 'META', 'GOOGL', 'SPY', 'PLTR', 'IWM', 'SBUX', 'SHOP',
   'NFLX', 'SMCI', 'ARM', 'AMD', 'COIN', 'MU', 'HOOD', 'NVDA', 'TSLA', 'AMZN', 'CRWD',
 ] as const
 
-export type Bar = { timestamp: number; close: number; volume: number }
+export type Bar = { timestamp: number; open: number; high: number; low: number; close: number; volume: number }
 export type MarketData = {
   symbol: string
   price: number | null
@@ -28,7 +30,6 @@ export type Ranking = {
   stage: 'Premarket' | 'Regular session' | 'Last session' | 'Unavailable'
   updatedAt: number | null
 }
-
 export const changePercent = (item: MarketData): number | null =>
   item.price != null && item.previousClose != null && item.previousClose > 0
     ? (item.price / item.previousClose - 1) * 100
@@ -65,7 +66,7 @@ function atOrBefore(bars: Bar[], timestamp: number): Bar | undefined {
 
 function vwap(bars: Bar[]): number | null {
   const volume = bars.reduce((sum, bar) => sum + bar.volume, 0)
-  return volume > 0 ? bars.reduce((sum, bar) => sum + bar.close * bar.volume, 0) / volume : null
+  return volume > 0 ? bars.reduce((sum, bar) => sum + ((bar.high + bar.low + bar.close) / 3) * bar.volume, 0) / volume : null
 }
 
 function volumeRatio(bars: Bar[]): number | null {
@@ -76,7 +77,7 @@ function volumeRatio(bars: Bar[]): number | null {
 }
 
 export function rankCandidates(items: MarketData[]): Ranking {
-  const benchmark = items.find(item => item.symbol === 'QQQ')
+  const benchmark = items.find(item => item.symbol === marketConfig.benchmark)
   const latest = benchmark?.bars.at(-1)
   if (!benchmark?.previousClose || !latest) {
     return { strong: [], weak: [], allStrong: [], allWeak: [], stage: 'Unavailable', updatedAt: null }
@@ -92,7 +93,7 @@ export function rankCandidates(items: MarketData[]): Ranking {
   if (!benchLast) return { strong: [], weak: [], allStrong: [], allWeak: [], stage: 'Unavailable', updatedAt: latest.timestamp }
 
   const eligible = items.filter(item =>
-    !['QQQ', 'SPY', 'IWM'].includes(item.symbol) && item.previousClose && item.bars.length,
+    ![marketConfig.benchmark, 'SPY', 'IWM'].includes(item.symbol) && item.previousClose && item.bars.length,
   )
   const features = eligible.flatMap(item => {
     const bars = sessionBars(item, et.date, regular)
@@ -116,12 +117,16 @@ export function rankCandidates(items: MarketData[]): Ranking {
     const volumeScore = ratio == null ? 50 : clamp(50 + (ratio - 1) * 20)
     const vwapStrong = aboveVwap == null ? 50 : aboveVwap ? 100 : 0
     const vwapWeak = aboveVwap == null ? 50 : aboveVwap ? 0 : 100
+    const weights = marketConfig.regularWeights
+    const premarket = marketConfig.premarketWeights
     const strongScore = regular
-      ? 0.45 * relativeScore + 0.30 * momentumScore + 0.15 * vwapStrong + 0.10 * volumeScore
-      : 0.7 * relativeScore + 0.3 * momentumScore
+      ? weights.relativePerformance * relativeScore + weights.momentum * momentumScore +
+        weights.vwap * vwapStrong + weights.volume * volumeScore
+      : premarket.relativePerformance * relativeScore + premarket.momentum * momentumScore
     const weakScore = regular
-      ? 0.45 * (100 - relativeScore) + 0.30 * (100 - momentumScore) + 0.15 * vwapWeak + 0.10 * volumeScore
-      : 0.7 * (100 - relativeScore) + 0.3 * (100 - momentumScore)
+      ? weights.relativePerformance * (100 - relativeScore) + weights.momentum * (100 - momentumScore) +
+        weights.vwap * vwapWeak + weights.volume * volumeScore
+      : premarket.relativePerformance * (100 - relativeScore) + premarket.momentum * (100 - momentumScore)
     return [{ symbol: item.symbol, relativePerformance, momentum, aboveVwap, volumeRatio: ratio,
       strongScore, weakScore }]
   })
@@ -137,7 +142,9 @@ export function rankCandidates(items: MarketData[]): Ranking {
     .map(feature => makeCandidate(feature, 'strong'))
   const allWeak = [...features].sort((a, b) => b.weakScore - a.weakScore)
     .map(feature => makeCandidate(feature, 'weak'))
-  return { strong: allStrong.slice(0, 3), weak: allWeak.slice(0, 3), allStrong, allWeak, stage, updatedAt: benchLast.timestamp }
+  return { strong: allStrong.filter(item => item.score >= marketConfig.strongThreshold).slice(0, 3),
+    weak: allWeak.filter(item => item.score >= marketConfig.weakThreshold).slice(0, 3),
+    allStrong, allWeak, stage, updatedAt: benchLast.timestamp }
 }
 
 export class LeaderStability {
@@ -158,10 +165,10 @@ export class LeaderStability {
         leaders.push(challenger)
         continue
       }
-      const streak = challenger.score >= weakest.score + 5
+      const streak = challenger.score >= weakest.score + marketConfig.candidateReplacementMargin
         ? (this.streaks.get(challenger.symbol) ?? 0) + 1 : 0
       this.streaks.set(challenger.symbol, streak)
-      if (streak >= 2) {
+      if (streak >= marketConfig.candidateReplacementConfirmations) {
         leaders.splice(leaders.indexOf(weakest), 1, challenger)
         this.streaks.delete(challenger.symbol)
       }

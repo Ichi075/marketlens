@@ -1,6 +1,11 @@
-import { invoke } from '@tauri-apps/api/core'
 import { changePercent, LeaderStability, rankCandidates, WATCHLIST } from './market'
 import type { Candidate, MarketData, Ranking } from './market'
+import { marketConfig } from './config'
+import { YahooFinanceProvider, mergeMarketData } from './provider'
+import { advanceSetupState, calculateMarketLevels, createSetup, setupContext } from './setup'
+import type { Direction, Setup, SetupState } from './setup'
+import { notifySetupReady } from './notifications'
+import { loadSetups, recordPaperTrade, saveSetups } from './storage'
 import './style.css'
 
 type Pane = 0 | 1
@@ -52,6 +57,9 @@ let fetchError = ''
 let strongStability = new LeaderStability()
 let weakStability = new LeaderStability()
 let rankingSession = ''
+let setups: Setup[] = loadSetups()
+const provider = new YahooFinanceProvider()
+let initialLoadComplete = false
 
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -89,6 +97,7 @@ app.innerHTML = `
       <div class="side-head"><div><span class="eyebrow">Live monitor</span><h1>Watchlist</h1></div><button id="close-sidebar" class="icon-button" aria-label="Close watchlist">✕</button></div>
       <div class="market-status" id="market-status"><span class="status-dot"></span><span>Loading market data…</span></div>
       <div id="candidate-sections"></div>
+      <section class="active-setups"><div class="section-title"><div><span class="eyebrow">Entry monitor</span><h2><span class="section-spark setup">●</span>Active setups</h2></div><span class="section-count" id="setup-count">0</span></div><div id="active-setups-list" class="setup-list"></div></section>
       <div class="list-title"><div><span class="eyebrow">Tracking</span><h2>All symbols <span>${WATCHLIST.length}</span></h2></div><span class="sort-label">Change % ↓</span></div>
       <div id="watchlist" class="watchlist" aria-live="polite"></div>
       <div class="side-footer">Quotes: Yahoo Finance chart endpoint<br>Charts: TradingView · Data may be delayed</div>
@@ -191,6 +200,23 @@ function renderCandidates() {
     : `<div class="empty-candidates">${loading ? 'Calculating candidates…' : 'Waiting for intraday data'}</div>`}</div></section>`).join('')
 }
 
+const setupLabels: Record<SetupState, string> = {
+  SCANNING: 'Scanning', CANDIDATE: 'Candidate', BREAKOUT_DETECTED: 'Breakout detected',
+  BREAKOUT_CONFIRMED: '5m confirmed', RETEST_WAIT: 'Waiting for retest',
+  RETEST_DETECTED: 'Retest detected', SETUP_READY: 'SETUP READY', INVALIDATED: 'Invalid',
+  EXPIRED: 'Expired', DATA_STALE: 'Data stale',
+}
+function renderSetups() {
+  const visible = setups.slice(-8).reverse()
+  document.querySelector<HTMLElement>('#setup-count')!.textContent = String(visible.length)
+  document.querySelector<HTMLElement>('#active-setups-list')!.innerHTML = visible.length ? visible.map(setup => {
+    const tone = setup.direction === 'CALL' ? 'call' : 'put'
+    const timeline = setup.events.slice(-6).map(event => `<li><time>${timeEt(event.timestamp).replace(' ET', '')}</time>${escapeHtml(event.message)}</li>`).join('')
+    const terminal = ['INVALIDATED', 'EXPIRED'].includes(setup.state) ? 'terminal' : ''
+    return `<article class="setup-card ${tone} ${setup.state === 'SETUP_READY' ? 'ready' : ''} ${terminal}"><button type="button" data-symbol="${setup.symbol}" title="Show ${setup.symbol} in selected chart"><span class="setup-symbol">${logoMarkup(setup.symbol)}<span><strong>${setup.symbol}</strong><small>${setup.direction} · ${setup.levelType}</small></span></span><span class="setup-state">${setupLabels[setup.state]}</span></button><div class="setup-level">${escapeHtml(setup.reasons[0])} · ${setup.levelType} ${price({ price: setup.levelPrice, currency: 'USD' } as MarketData)}${setup.vwap == null ? '' : ` · VWAP ${price({ price: setup.vwap, currency: 'USD' } as MarketData)}`}</div><div class="setup-metrics">RS ${percent(setup.relativePerformance)} · 5m ${percent(setup.momentum)} · RVOL ${setup.volumeRatio == null ? '—' : `${setup.volumeRatio.toFixed(1)}x`}</div><details><summary>Timeline</summary><ol>${timeline}</ol></details></article>`
+  }).join('') : '<div class="empty-candidates">Waiting for ranked candidates and market levels</div>'
+}
+
 function renderWatchlist() {
   const sorted = [...WATCHLIST].sort((a, b) => {
     const left = changePercent(quotes.get(a) ?? { price: null, previousClose: null } as MarketData)
@@ -252,46 +278,52 @@ function setTicker(pane: Pane, raw: string) {
   }
 }
 
-async function fetchMarketData(symbols: string[]): Promise<MarketData[]> {
-  if ('__TAURI_INTERNALS__' in window) return invoke<MarketData[]>('get_market_data', { symbols })
-  if (import.meta.env.DEV) {
-    const result = await Promise.all(symbols.map(async symbol => {
-      try {
-        const response = await fetch(`/api/chart/${symbol}`)
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        const payload = await response.json()
-        const chart = payload.chart?.result?.[0]
-        if (!chart) throw new Error('No chart data')
-        const timestamps: number[] = chart.timestamp ?? []
-        const closes: (number | null)[] = chart.indicators?.quote?.[0]?.close ?? []
-        const volumes: (number | null)[] = chart.indicators?.quote?.[0]?.volume ?? []
-        const bars = timestamps.flatMap((timestamp, index) => closes[index] == null ? []
-          : [{ timestamp, close: closes[index]!, volume: volumes[index] ?? 0 }])
-        return { symbol, price: bars.at(-1)?.close ?? chart.meta?.regularMarketPrice ?? null,
-          previousClose: chart.meta?.chartPreviousClose ?? chart.meta?.previousClose ?? null,
-          currency: chart.meta?.currency ?? 'USD', bars, error: null } as MarketData
-      } catch {
-        return { symbol, price: null, previousClose: null, currency: null, bars: [],
-          error: 'Quote unavailable' } as MarketData
-      }
-    }))
-    return result
+function updateSetups(now: number) {
+  if (!ranking) return
+  const candidates: { candidate: Candidate; direction: Direction; rank: number }[] = [
+    ...ranking.strong.map((candidate, index) => ({ candidate, direction: 'CALL' as const, rank: index + 1 })),
+    ...ranking.weak.map((candidate, index) => ({ candidate, direction: 'PUT' as const, rank: index + 1 })),
+  ]
+  const activeIds = new Set(candidates.map(({ candidate, direction }) => `${candidate.symbol}:${direction}`))
+  for (const entry of candidates) {
+    if (ranking.stage !== 'Regular session') continue
+    const data = quotes.get(entry.candidate.symbol)
+    if (!data) continue
+    const created = createSetup(entry.candidate, entry.direction, entry.rank, calculateMarketLevels(data), now)
+    if (created && !setups.some(setup => setup.id === created.id)) setups.push(created)
   }
-  throw new Error('Run MarketLens as a Tauri app to load quotes')
+  setups = setups.map(setup => {
+    const data = quotes.get(setup.symbol)
+    if (!data) return setup
+    const active = activeIds.has(`${setup.symbol}:${setup.direction}`)
+    const previousState = setup.state
+    const next = advanceSetupState(setup, setupContext(data, now, active))
+    if (next.state === 'SETUP_READY' && previousState !== 'SETUP_READY') {
+      const entry = data.bars.at(-1)?.close
+      if (entry != null) recordPaperTrade(next, entry)
+      void notifySetupReady(next)
+    }
+    return next
+  })
+  saveSetups(setups)
 }
 
-async function refreshQuotes() {
+async function refreshQuotes(scope: 'full' | 'active' = 'full') {
   if (loading) return
+  if (scope === 'active' && !initialLoadComplete) return
   loading = true
   fetchError = ''
   renderStatus()
-  const symbols = [...new Set([...WATCHLIST, ...tickers])]
+  const activeSymbols = setups.filter(setup => !['SETUP_READY', 'INVALIDATED', 'EXPIRED'].includes(setup.state)).map(setup => setup.symbol)
+  const leaders = [...(ranking?.strong ?? []), ...(ranking?.weak ?? [])].map(candidate => candidate.symbol)
+  const symbols = scope === 'full' ? [...new Set([...WATCHLIST, ...tickers])]
+    : [...new Set([...activeSymbols, ...leaders, marketConfig.benchmark, 'SPY', ...tickers])]
   try {
-    const result = await fetchMarketData(symbols)
-    quotes = new Map(result.map(item => [item.symbol, item]))
+    const result = await provider.fetch(symbols, !initialLoadComplete && scope === 'full' ? '5d' : '1d')
+    result.forEach(item => quotes.set(item.symbol, mergeMarketData(quotes.get(item.symbol), item)))
     const failed = result.filter(item => item.price == null).length
     if (failed === result.length) fetchError = 'Quote service unavailable · Retry'
-    ranking = rankCandidates(result)
+    ranking = rankCandidates([...quotes.values()])
     const session = ranking.updatedAt == null ? '' : new Intl.DateTimeFormat('en-CA', {
       timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
     }).format(new Date(ranking.updatedAt * 1000))
@@ -302,13 +334,16 @@ async function refreshQuotes() {
     }
     if (ranking.strong.length) ranking.strong = strongStability.update(ranking.strong, ranking.allStrong)
     if (ranking.weak.length) ranking.weak = weakStability.update(ranking.weak, ranking.allWeak)
+    updateSetups(Date.now() / 1000)
     lastFetch = new Date()
+    initialLoadComplete = true
   } catch (error) {
     fetchError = error instanceof Error ? error.message : 'Could not load quotes'
   } finally {
     loading = false
     renderStatus()
     renderCandidates()
+    renderSetups()
     renderWatchlist()
     updateChartQuote(0)
     updateChartQuote(1)
@@ -390,6 +425,8 @@ mountChart(0)
 mountChart(1)
 document.querySelector<HTMLElement>('#sidebar')!.inert = true
 renderCandidates()
+renderSetups()
 renderWatchlist()
 void refreshQuotes()
-window.setInterval(() => void refreshQuotes(), 120_000)
+window.setInterval(() => void refreshQuotes('full'), marketConfig.fullWatchlistRefreshMs)
+window.setInterval(() => void refreshQuotes('active'), marketConfig.activeSetupRefreshMs)

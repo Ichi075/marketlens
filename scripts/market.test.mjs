@@ -5,7 +5,8 @@ import { changePercent, LeaderStability, rankCandidates } from '../src/market.ts
 const start = Date.UTC(2026, 8, 17, 13, 30) / 1000
 const quote = (symbol, values, previousClose = 100) => ({
   symbol, previousClose, price: values.at(-1), currency: 'USD', error: null,
-  bars: values.map((close, index) => ({ timestamp: start + index * 60, close, volume: 1000 })),
+  bars: values.map((close, index) => ({ timestamp: start + index * 60,
+    open: close, high: close, low: close, close, volume: 1000 })),
 })
 
 test('change percentage is measured against previous close', () => {

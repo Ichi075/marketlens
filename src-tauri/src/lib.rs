@@ -7,6 +7,9 @@ use std::time::Duration;
 #[serde(rename_all = "camelCase")]
 struct Bar {
     timestamp: i64,
+    open: f64,
+    high: f64,
+    low: f64,
     close: f64,
     volume: f64,
 }
@@ -26,7 +29,7 @@ fn number(value: &Value) -> Option<f64> {
     value.as_f64().filter(|n| n.is_finite() && *n > 0.0)
 }
 
-async fn fetch_symbol(client: reqwest::Client, symbol: String) -> MarketData {
+async fn fetch_symbol(client: reqwest::Client, symbol: String, range: String) -> MarketData {
     let mut data = MarketData {
         symbol: symbol.clone(),
         price: None,
@@ -45,7 +48,7 @@ async fn fetch_symbol(client: reqwest::Client, symbol: String) -> MarketData {
     }
 
     let url = format!(
-        "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1m&range=1d&includePrePost=true"
+        "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1m&range={range}&includePrePost=true"
     );
     let response = match client.get(url).send().await {
         Ok(response) => response,
@@ -75,12 +78,18 @@ async fn fetch_symbol(client: reqwest::Client, symbol: String) -> MarketData {
     data.currency = meta["currency"].as_str().map(str::to_owned);
 
     let times = result["timestamp"].as_array();
+    let opens = result["indicators"]["quote"][0]["open"].as_array();
+    let highs = result["indicators"]["quote"][0]["high"].as_array();
+    let lows = result["indicators"]["quote"][0]["low"].as_array();
     let closes = result["indicators"]["quote"][0]["close"].as_array();
     let volumes = result["indicators"]["quote"][0]["volume"].as_array();
     if let (Some(times), Some(closes)) = (times, closes) {
         for (i, time) in times.iter().enumerate() {
-            if let (Some(timestamp), Some(close)) = (
+            if let (Some(timestamp), Some(open), Some(high), Some(low), Some(close)) = (
                 time.as_i64(),
+                opens.and_then(|v| v.get(i)).and_then(number),
+                highs.and_then(|v| v.get(i)).and_then(number),
+                lows.and_then(|v| v.get(i)).and_then(number),
                 closes.get(i).and_then(number),
             ) {
                 let volume = volumes
@@ -88,7 +97,7 @@ async fn fetch_symbol(client: reqwest::Client, symbol: String) -> MarketData {
                     .and_then(Value::as_f64)
                     .unwrap_or(0.0)
                     .max(0.0);
-                data.bars.push(Bar { timestamp, close, volume });
+                data.bars.push(Bar { timestamp, open, high, low, close, volume });
             }
         }
     }
@@ -101,9 +110,13 @@ async fn fetch_symbol(client: reqwest::Client, symbol: String) -> MarketData {
 }
 
 #[tauri::command]
-async fn get_market_data(symbols: Vec<String>) -> Result<Vec<MarketData>, String> {
+async fn get_market_data(symbols: Vec<String>, range: Option<String>) -> Result<Vec<MarketData>, String> {
     if symbols.len() > 30 {
         return Err("Too many tickers".into());
+    }
+    let range = range.unwrap_or_else(|| "1d".into());
+    if range != "1d" && range != "5d" {
+        return Err("Unsupported history range".into());
     }
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(12))
@@ -112,7 +125,8 @@ async fn get_market_data(symbols: Vec<String>) -> Result<Vec<MarketData>, String
         .map_err(|_| "Could not initialize quote client".to_string())?;
     let results = stream::iter(symbols.into_iter().map(|symbol| {
         let client = client.clone();
-        async move { fetch_symbol(client, symbol).await }
+        let range = range.clone();
+        async move { fetch_symbol(client, symbol, range).await }
     }))
     .buffered(5)
     .collect::<Vec<_>>()
@@ -123,6 +137,7 @@ async fn get_market_data(symbols: Vec<String>) -> Result<Vec<MarketData>, String
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![get_market_data])
         .run(tauri::generate_context!())
         .expect("error while running MarketLens");
