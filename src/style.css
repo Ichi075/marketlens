@@ -23,12 +23,24 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 
 .shell { height: 100dvh; min-height: 0; overflow: hidden; }
 .workspace { display: flex; flex-direction: column; width: 100%; height: 100%; min-width: 0; min-height: 0; background: linear-gradient(145deg,#f8f9fb,#f0f3f7); }
-.topbar { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 78px; padding: 0 22px; flex: none; background: rgba(255,255,255,.78); backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%); box-shadow: 0 1px 0 #dce3e94d, 0 10px 28px #7890a70a; }
+.topbar { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 16px; height: 78px; padding: 0 22px; flex: none; background: rgba(255,255,255,.78); backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%); box-shadow: 0 1px 0 #dce3e94d, 0 10px 28px #7890a70a; }
 .topbar-left, .topbar-right { display: flex; align-items: center; min-width: 0; }
 .topbar-left { gap: 14px; }
-.topbar-right { gap: 9px; }
+.topbar-right { justify-self: end; gap: 9px; }
 .topbar h2 { margin: 1px 0 0; color: #1b222b; font-size: 20px; font-weight: 700; line-height: 1.05; letter-spacing: -.045em; }
 #updated-at { margin-right: 10px; color: #80909f; font-size: 11px; white-space: nowrap; }
+.market-clock { display: flex; align-items: center; justify-content: center; gap: 13px; min-width: 300px; color: #26313d; font-variant-numeric: tabular-nums; }
+.market-clock-primary { text-align: right; }
+.market-clock-primary strong { display: block; font-size: 20px; font-weight: 730; line-height: 1; letter-spacing: .025em; }
+.market-clock-primary > span, .market-clock-details > span { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; font-weight: 620; white-space: nowrap; }
+.market-clock-details { min-width: 130px; padding-left: 13px; border-left: 1px solid #dfe5eb; }
+.market-clock-details > div { display: flex; align-items: center; gap: 7px; margin-top: 4px; white-space: nowrap; }
+.market-phase { padding: 3px 6px; border-radius: 6px; background: #eef1f5; color: #6f7d8c; font-size: 9px; font-weight: 750; text-transform: uppercase; }
+[data-market-countdown] { color: #6e7d8d; font-size: 10px; font-weight: 680; }
+.market-clock[data-phase="premarket"] .market-phase { background: #fff2d9; color: #a66c13; }
+.market-clock[data-phase="open"] .market-phase { background: #dff4e9; color: #21825e; }
+.market-clock[data-phase="after-hours"] .market-phase { background: #e8e3fa; color: #7258b1; }
+.android-market-clock { display: none; }
 .icon-button, .refresh-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 36px; border: 1px solid #e2e8ee; border-radius: 10px; background: #ffffffd9; color: #394b5d; box-shadow: 0 1px 2px #2937460a; transition: background .16s, box-shadow .16s, transform .12s; }
 .icon-button { width: 38px; flex: none; font-size: 17px; }
 .refresh-button { padding: 0 13px; font-size: 11px; font-weight: 650; white-space: nowrap; }
@@ -140,10 +152,15 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 
 @media (max-width: 1120px) {
   #updated-at { display: none; }
+  .market-clock { min-width: 250px; gap: 9px; }
+  .market-clock-details { min-width: 116px; padding-left: 9px; }
+  .market-clock-primary strong { font-size: 18px; }
   .chart-header { flex-direction: column; align-items: stretch; justify-content: center; gap: 7px; min-height: 103px; }
   .symbol-form { width: 100%; }
 }
 @media (max-width: 700px) {
+  .desktop-market-clock { display: none; }
+  .topbar { display: flex; justify-content: space-between; }
   .topbar { height: calc(53px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 9px 0; }.topbar-left { gap: 8px; }.topbar h2 { font-size: 16px; }.topbar .eyebrow { display: none; }
   .topbar-right { gap: 5px; }.topbar-right .refresh-button { width: 34px; height: 34px; padding: 0; font-size: 17px; }.topbar-right .refresh-button > span:last-child { display: none; }
   .charts { grid-template-columns: minmax(0,1fr); grid-template-rows: repeat(2,minmax(0,1fr)); gap: 5px; padding: 5px; padding-bottom: max(5px,env(safe-area-inset-bottom)); }
@@ -170,6 +187,12 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 }
 [data-theme="dark"] .workspace { background: linear-gradient(145deg,#121923,#0d1118); }
 [data-theme="dark"] .topbar { background: rgba(24,31,41,.86); box-shadow: 0 1px 0 #34415388, 0 10px 28px #05090d33; }
+[data-theme="dark"] .market-clock { color: #edf3f9; }
+[data-theme="dark"] .market-clock-details { border-left-color: #3a4654; }
+[data-theme="dark"] .market-phase { background: #2b3745; color: #b2bfcd; }
+[data-theme="dark"] .market-clock[data-phase="premarket"] .market-phase { background: #493b20; color: #f1c16b; }
+[data-theme="dark"] .market-clock[data-phase="open"] .market-phase { background: #214937; color: #87d9aa; }
+[data-theme="dark"] .market-clock[data-phase="after-hours"] .market-phase { background: #37304f; color: #c4b2f7; }
 [data-theme="dark"] .topbar h2, [data-theme="dark"] .chart-heading strong,
 [data-theme="dark"] .brand strong, [data-theme="dark"] .side-head h1,
 [data-theme="dark"] .section-title h2, [data-theme="dark"] .list-title h2,
@@ -257,6 +280,10 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
   border: 0; border-radius: 0; box-shadow: none; transform: none; transition: none;
 }
 .platform-android .brand { height: 63px; padding: 0 18px; }
+.platform-android .android-market-clock { display: flex; min-width: 0; margin: 13px 18px 4px; padding: 13px 15px; border: 1px solid #e1e7ed; border-radius: 13px; background: #f6f8fa; }
+.platform-android .market-clock-primary strong { font-size: 22px; }
+.platform-android .market-clock-details { min-width: 0; }
+.platform-android .market-clock-details > div { flex-wrap: wrap; row-gap: 5px; }
 .platform-android .side-head { padding: 17px 18px 11px; }
 .platform-android .side-head h1 { font-size: 24px; }
 .platform-android .monitor-actions { display: flex; }
@@ -265,3 +292,4 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .platform-android .candidate-card, .platform-android .stock-row { cursor: default; }
 .platform-android .candidate-card:hover, .platform-android .candidate-card.weak:hover,
 .platform-android .stock-row:hover { transform: none; }
+[data-theme="dark"].platform-android .android-market-clock { border-color: #344252; background: #1b2531; }

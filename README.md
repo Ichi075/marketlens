@@ -19,6 +19,7 @@ Open [demo.html](demo.html) in a browser to explore the interface without a buil
 - Active Setup cards with a state timeline, one-time OS notification at `SETUP_READY`, and a local Paper Mode entry record.
 - Two independent TradingView charts on Windows and macOS, saved ticker choices, manual refresh, and tiered quote refresh.
 - Android uses the watchlist as its full-screen main view and does not load TradingView, reducing WebView and network load.
+- A live New York clock shows the current session and the time remaining until the next open or close.
 - Dark theme by default, with a saved light/dark preference.
 - Chart settings for extended hours, VWAP, and 8 EMA, reapplied when a ticker changes.
 

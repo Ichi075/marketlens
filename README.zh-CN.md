@@ -19,6 +19,7 @@ MarketLens 是一款基于 Tauri 2 的股票行情应用，支持 Windows、macO
 - Active Setup状态时间线、仅在首次进入`SETUP_READY`时发送的系统通知，以及本地Paper Mode记录。
 - Windows 和 macOS 提供两张独立的 TradingView 图表、保存所选代码、手动刷新和分层报价刷新。
 - Android 将自选股列表作为全屏主界面，不加载 TradingView，以减少 WebView 与网络负载。
+- 实时显示纽约时间、当前交易时段以及距离下一次开盘或收盘的剩余时间。
 - 默认使用深色主题，并保存浅色／深色主题偏好。
 - 保存盘前盘后时段、VWAP 和 8 EMA 的图表设置，并在切换股票时重新应用。
 

@@ -6,6 +6,7 @@ import { advanceSetupState, calculateMarketLevels, createSetup, setupContext } f
 import type { Direction, Setup, SetupState } from './setup'
 import { notifySetupReady } from './notifications'
 import { loadSetups, recordPaperTrade, saveSetups } from './storage'
+import { getMarketClockState } from './marketClock'
 import './style.css'
 
 type Pane = 0 | 1
@@ -94,10 +95,16 @@ const timeEt = (timestamp: number) => new Intl.DateTimeFormat('en-US', {
   hour12: false,
 }).format(new Date(timestamp * 1000)) + ' ET'
 
+const marketClockMarkup = (className: string) => `<section class="market-clock ${className}" role="timer" aria-label="New York market clock">
+  <div class="market-clock-primary"><strong data-market-time>--:--:--</strong><span data-market-zone>New York</span></div>
+  <div class="market-clock-details"><span data-market-date>New York time</span><div><span class="market-phase" data-market-phase>Checking session</span><span data-market-countdown></span></div></div>
+</section>`
+
 app.innerHTML = `
   <div class="shell">
     <aside class="sidebar" id="sidebar">
       <div class="brand"><div class="brand-mark"><span></span><span></span><span></span></div><div><strong>MarketLens</strong><small>${isAndroid ? 'Market monitor' : 'Your market workspace'}</small></div></div>
+      ${marketClockMarkup('android-market-clock')}
       <div class="side-head"><div><span class="eyebrow">Live monitor</span><h1>Watchlist</h1></div><div class="monitor-actions"><button class="refresh-button" type="button" data-theme-toggle aria-pressed="false"><span class="theme-icon" aria-hidden="true"></span><span class="theme-label"></span></button><button class="refresh-button" type="button" data-refresh aria-label="Refresh quotes"><span class="refresh-icon">↻</span><span>Refresh</span></button></div><button id="close-sidebar" class="icon-button" aria-label="Close watchlist">✕</button></div>
       <div class="market-status" id="market-status"><span class="status-dot"></span><span>Loading market data…</span></div>
       <div id="candidate-sections"></div>
@@ -108,7 +115,7 @@ app.innerHTML = `
     </aside>
     <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
     <main class="workspace">
-      <header class="topbar"><div class="topbar-left"><button id="open-sidebar" class="icon-button" aria-label="Open watchlist" aria-expanded="false" aria-controls="sidebar">☰</button><div><span class="eyebrow">Dual chart workspace</span><h2>MarketLens</h2></div></div><div class="topbar-right"><span id="updated-at">Waiting for quotes</span><button id="theme-toggle" class="refresh-button" type="button" data-theme-toggle aria-pressed="false"><span class="theme-icon" aria-hidden="true"></span><span class="theme-label"></span></button><button id="chart-settings-button" class="refresh-button" type="button">⚙ <span>Chart settings</span></button><button id="refresh" class="refresh-button" type="button" data-refresh aria-label="Refresh quotes"><span class="refresh-icon">↻</span><span>Refresh</span></button></div></header>
+      <header class="topbar"><div class="topbar-left"><button id="open-sidebar" class="icon-button" aria-label="Open watchlist" aria-expanded="false" aria-controls="sidebar">☰</button><div><span class="eyebrow">Dual chart workspace</span><h2>MarketLens</h2></div></div>${marketClockMarkup('desktop-market-clock')}<div class="topbar-right"><span id="updated-at">Waiting for quotes</span><button id="theme-toggle" class="refresh-button" type="button" data-theme-toggle aria-pressed="false"><span class="theme-icon" aria-hidden="true"></span><span class="theme-label"></span></button><button id="chart-settings-button" class="refresh-button" type="button">⚙ <span>Chart settings</span></button><button id="refresh" class="refresh-button" type="button" data-refresh aria-label="Refresh quotes"><span class="refresh-icon">↻</span><span>Refresh</span></button></div></header>
       <div class="charts">
         ${[0, 1].map(index => `<section class="chart-panel" id="pane-${index}" aria-label="Chart ${index + 1}"><div class="chart-header"><div class="chart-identity">${logoMarkup(tickers[index], 'chart-number')}<div><span class="eyebrow">${index === 0 ? 'Left chart' : 'Right chart'}</span><div class="chart-heading"><strong id="title-${index}"></strong><span id="change-${index}" class="chart-change"></span></div></div></div><form class="symbol-form" data-pane="${index}"><label class="sr-only" for="ticker-${index}">Ticker for chart ${index + 1}</label><span class="search-glyph">⌕</span><input id="ticker-${index}" name="ticker" autocomplete="off" spellcheck="false" maxlength="15" placeholder="Ticker" value="${tickers[index]}" /><button type="submit">Show ↗</button></form></div><div class="chart-body" id="chart-${index}"></div></section>`).join('')}
       </div>
@@ -124,6 +131,19 @@ app.innerHTML = `
       </form>
     </dialog>
   </div>`
+
+function renderMarketClock() {
+  const state = getMarketClockState()
+  document.querySelectorAll<HTMLElement>('.market-clock').forEach(clock => {
+    clock.dataset.phase = state.phase
+    clock.setAttribute('aria-label', `New York time ${state.time}. ${state.phaseLabel}. ${state.countdown}.`)
+    clock.querySelector<HTMLElement>('[data-market-time]')!.textContent = state.time
+    clock.querySelector<HTMLElement>('[data-market-zone]')!.textContent = `New York · ${state.zone}`
+    clock.querySelector<HTMLElement>('[data-market-date]')!.textContent = state.date
+    clock.querySelector<HTMLElement>('[data-market-phase]')!.textContent = state.phaseLabel
+    clock.querySelector<HTMLElement>('[data-market-countdown]')!.textContent = state.countdown
+  })
+}
 
 function tradingViewSymbol(ticker: string): string {
   const exchanges: Record<string, string> = {
@@ -455,9 +475,11 @@ document.querySelectorAll<HTMLElement>('.chart-panel').forEach((panel, index) =>
 
 if (!isAndroid) mountBothCharts()
 document.querySelector<HTMLElement>('#sidebar')!.inert = !isAndroid
+renderMarketClock()
 renderCandidates()
 renderSetups()
 renderWatchlist()
+window.setInterval(renderMarketClock, 1000)
 window.setTimeout(() => void refreshQuotes(), isAndroid ? 0 : compactViewport.matches ? 650 : 0)
 window.setInterval(() => { if (!document.hidden) void refreshQuotes('full') }, marketConfig.fullWatchlistRefreshMs)
 window.setInterval(() => { if (!document.hidden) void refreshQuotes('active') }, marketConfig.activeSetupRefreshMs)
