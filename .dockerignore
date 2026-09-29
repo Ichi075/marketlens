@@ -1,0 +1,11 @@
+.git
+.github
+.idea
+.vscode
+node_modules
+dist
+dist-android
+src-tauri/gen
+src-tauri/target
+*.log
+.DS_Store

@@ -30,7 +30,7 @@ pnpm install --frozen-lockfile
 pnpm tauri dev
 ```
 
-Platform-specific prerequisites, build commands, and output locations are documented in the [build guide](BUILDING.md). `pnpm dev` opens the frontend in a browser. In development, a Vite proxy fetches quotes; the packaged Tauri app fetches them through Rust.
+Platform-specific prerequisites, build commands, output locations, and the Docker-only Android workflow are documented in the [build guide](BUILDING.md). `pnpm dev` opens the frontend in a browser. In development, a Vite proxy fetches quotes; the packaged Tauri app fetches them through Rust.
 
 ## Setup monitoring
 
@@ -71,3 +71,4 @@ The 8 EMA length setting is applied, but the free widget does not reliably honor
 - `src/style.css`: desktop and mobile layout
 - `demo.html`: standalone HTML demo
 - `BUILDING.md`: platform-specific build guide
+- `Dockerfile.android` and `scripts/build-android-docker.sh`: reproducible Android build environment

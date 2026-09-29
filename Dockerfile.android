@@ -1,0 +1,74 @@
+FROM --platform=linux/amd64 node:22.14.0-bookworm-slim
+
+ARG PNPM_VERSION=10.15.1
+ARG RUST_VERSION=1.89.0
+ARG RUSTUP_VERSION=1.28.2
+ARG ANDROID_COMMAND_LINE_TOOLS=15859902
+ARG ANDROID_COMMAND_LINE_TOOLS_SHA256=4e4c464f145a7512b57d088ac6c278c03c9eea610886b35a5e0804e74eedf583
+ARG ANDROID_PLATFORM=36
+ARG ANDROID_BUILD_TOOLS=36.0.0
+ARG ANDROID_NDK=28.2.13676358
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 \
+    ANDROID_HOME=/opt/android-sdk \
+    ANDROID_SDK_ROOT=/opt/android-sdk \
+    NDK_HOME=/opt/android-sdk/ndk/28.2.13676358 \
+    CARGO_HOME=/usr/local/cargo \
+    RUSTUP_HOME=/usr/local/rustup \
+    PATH=/usr/local/cargo/bin:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:$PATH \
+    CI=true
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+      ca-certificates \
+      curl \
+      file \
+      git \
+      libssl-dev \
+      openjdk-17-jdk-headless \
+      pkg-config \
+      unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN npm install --global "pnpm@${PNPM_VERSION}" \
+    && curl --fail --show-error --location \
+      "https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/x86_64-unknown-linux-gnu/rustup-init" \
+      --output /tmp/rustup-init \
+    && chmod +x /tmp/rustup-init \
+    && /tmp/rustup-init -y --no-modify-path --profile minimal --default-toolchain "${RUST_VERSION}" \
+    && rm /tmp/rustup-init \
+    && rustup target add \
+      aarch64-linux-android \
+      armv7-linux-androideabi \
+      i686-linux-android \
+      x86_64-linux-android
+
+RUN mkdir -p "${ANDROID_HOME}/cmdline-tools" \
+    && curl --fail --show-error --location \
+      "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_COMMAND_LINE_TOOLS}_latest.zip" \
+      --output /tmp/android-command-line-tools.zip \
+    && echo "${ANDROID_COMMAND_LINE_TOOLS_SHA256}  /tmp/android-command-line-tools.zip" | sha256sum --check - \
+    && unzip -q /tmp/android-command-line-tools.zip -d /tmp/android-command-line-tools \
+    && mv /tmp/android-command-line-tools/cmdline-tools "${ANDROID_HOME}/cmdline-tools/latest" \
+    && rm -rf /tmp/android-command-line-tools /tmp/android-command-line-tools.zip \
+    && yes | sdkmanager --licenses >/dev/null \
+    && sdkmanager \
+      "platform-tools" \
+      "platforms;android-${ANDROID_PLATFORM}" \
+      "build-tools;${ANDROID_BUILD_TOOLS}" \
+      "ndk;${ANDROID_NDK}"
+
+WORKDIR /workspace
+
+# Keep JavaScript dependency installation in a reusable layer.
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+COPY scripts/build-android-docker.sh /usr/local/bin/build-android
+RUN chmod +x /usr/local/bin/build-android \
+    && mkdir -p /output
+
+ENTRYPOINT ["/usr/local/bin/build-android"]
+CMD ["debug"]

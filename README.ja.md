@@ -30,7 +30,7 @@ pnpm install --frozen-lockfile
 pnpm tauri dev
 ```
 
-Windows・macOS・Android のビルド方法、必要なツール、生成物の場所は[ビルド手順](BUILDING.ja.md)に記載しています。`pnpm dev` はブラウザでフロントエンドを確認するためのコマンドです。開発時は Vite のプロキシ、Tauri アプリでは Rust 側の処理で株価を取得します。
+Windows・macOS・Android のビルド方法、必要なツール、生成物の場所、DockerだけでAndroid版を作る手順は[ビルド手順](BUILDING.ja.md)に記載しています。`pnpm dev` はブラウザでフロントエンドを確認するためのコマンドです。開発時は Vite のプロキシ、Tauri アプリでは Rust 側の処理で株価を取得します。
 
 ## セットアップ監視
 
@@ -71,3 +71,4 @@ MarketLensのVWAPは通常取引時間の `(high + low + close) / 3 × volume` �
 - `src/style.css`：デスクトップとモバイルの表示
 - `demo.html`：単体で開ける HTML デモ
 - `BUILDING.ja.md`：プラットフォーム別のビルド手順
+- `Dockerfile.android` と `scripts/build-android-docker.sh`：再現可能なAndroidビルド環境

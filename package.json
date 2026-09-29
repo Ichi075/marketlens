@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "test": "node scripts/market.test.mjs && node scripts/setup.test.mjs && node scripts/check_demo.mjs",
+    "test": "node scripts/market.test.mjs && node scripts/setup.test.mjs && node scripts/check_demo.mjs && node scripts/check_android_docker.mjs",
     "preview": "vite preview",
     "tauri": "tauri",
     "desktop": "tauri dev",
