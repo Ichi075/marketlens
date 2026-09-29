@@ -50,7 +50,7 @@ App Store外で配布する場合はAppleの署名と公証が必要です。[ma
 
 ## DockerでAndroidをビルド
 
-再現性を優先する場合の推奨手順です。ホスト側に必要なのはDocker DesktopまたはDocker Engineだけです。イメージ内ではNode 22.14.0、pnpm 10.15.1、Rust 1.89.0、JDK 17、Android SDK Platform 36、Build Tools 36.0.0、NDK 28.2.13676358、Android Command-line Tools 15859902を固定し、4種類のTauri Android向けRustターゲットを導入します。Tauri CLIはグローバルインストールせず、`pnpm-lock.yaml`の`@tauri-apps/cli` 2.11.4を`pnpm tauri`で実行します。
+再現性を優先する場合の推奨手順です。ホスト側に必要なのはDocker DesktopまたはDocker Engineだけです。イメージ内ではNode 22.14.0、pnpm 10.15.1、Rust 1.90.0、JDK 17、Android SDK Platform 36、Build Tools 36.0.0、NDK 28.2.13676358、Android Command-line Tools 15859902を固定し、4種類のTauri Android向けRustターゲットを導入します。Tauri CLIはグローバルインストールせず、`pnpm-lock.yaml`の`@tauri-apps/cli` 2.11.4を`pnpm tauri`で実行します。
 
 GoogleのLinux向けAndroid NDKホストツールがx86-64であるため、イメージは`linux/amd64`を使用します。Apple SiliconではDocker Desktopのエミュレーションで動作するため、ビルドは遅くなります。
 

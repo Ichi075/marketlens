@@ -18,6 +18,7 @@ MarketLens は、Windows・macOS・Android 向けの Tauri 2 製株価ウォッ�
 - 重要レベル突破、確定5分足、リテスト、反応までCALL / PUTセットアップを自動監視
 - 状態履歴付きのActive Setupカード、`SETUP_READY`初回のみのOS通知、Paper Modeへの仮想エントリー保存
 - 独立した2つの TradingView チャート、ティッカーの保存、手動更新、二段階の株価更新
+- モバイルではチャートを上下に配置し、Androidではシステムバーを一時表示式にした没入型フルスクリーン
 - ダークモードを初期表示とし、ライトモードへの切替結果を端末に保存
 - Chart settings で時間外取引、VWAP、8 EMA の初期設定を保存し、銘柄変更時に再適用
 

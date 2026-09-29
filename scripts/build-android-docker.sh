@@ -88,6 +88,7 @@ case "$mode" in
       pnpm tauri android init --ci
       printf 'Android project generated: %s\n' "$android_project"
     fi
+    pnpm android:prepare
     check_internet_permission
     ;;
   debug|release|aab)

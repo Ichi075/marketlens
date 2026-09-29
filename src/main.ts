@@ -39,6 +39,8 @@ function loadChartSettings(): ChartSettings {
   return { version: 2, extendedHours: true, studies: DEFAULT_STUDIES }
 }
 let chartSettings = loadChartSettings()
+const compactViewport = window.matchMedia('(max-width: 700px)')
+let secondChartTimer: number | undefined
 const app = document.querySelector<HTMLDivElement>('#app')!
 const saved = localStorage.getItem('marketlens:tickers')
 let parsed: unknown
@@ -155,11 +157,12 @@ function mountChart(pane: Pane) {
   script.type = 'text/javascript'
   script.async = true
   script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js'
+  const compact = compactViewport.matches
   script.textContent = JSON.stringify({
     autosize: true, symbol: tradingViewSymbol(ticker), interval: '5', timezone: 'exchange',
     theme, style: '1', locale: 'en', backgroundColor: theme === 'dark' ? '#171D27' : '#FFFFFF',
-    gridColor: theme === 'dark' ? 'rgba(160,180,205,0.07)' : 'rgba(30,42,64,0.055)', hide_side_toolbar: false, hide_top_toolbar: false,
-    allow_symbol_change: true, withdateranges: false, save_image: false,
+    gridColor: theme === 'dark' ? 'rgba(160,180,205,0.07)' : 'rgba(30,42,64,0.055)', hide_side_toolbar: false, hide_top_toolbar: compact,
+    allow_symbol_change: !compact, withdateranges: false, save_image: false,
     extended_hours: chartSettings.extendedHours,
     studies: chartSettings.studies.map(id => id === 'VWAP@tv-basicstudies'
       ? { id }
@@ -173,6 +176,19 @@ function mountChart(pane: Pane) {
   document.querySelector<HTMLElement>(`#title-${pane}`)!.textContent = ticker
   document.querySelector<HTMLInputElement>(`#ticker-${pane}`)!.value = ticker
   updateChartQuote(pane)
+}
+
+function mountBothCharts() {
+  if (secondChartTimer !== undefined) window.clearTimeout(secondChartTimer)
+  mountChart(0)
+  if (compactViewport.matches) {
+    secondChartTimer = window.setTimeout(() => {
+      secondChartTimer = undefined
+      mountChart(1)
+    }, 250)
+  } else {
+    mountChart(1)
+  }
 }
 
 function updateChartQuote(pane: Pane) {
@@ -381,8 +397,7 @@ themeToggle.addEventListener('click', () => {
   localStorage.setItem(THEME_KEY, theme)
   document.documentElement.dataset.theme = theme
   updateThemeToggle()
-  mountChart(0)
-  mountChart(1)
+  mountBothCharts()
 })
 const settingsDialog = document.querySelector<HTMLDialogElement>('#chart-settings-dialog')!
 const settingsForm = document.querySelector<HTMLFormElement>('#chart-settings-form')!
@@ -404,8 +419,7 @@ settingsForm.addEventListener('submit', event => {
   if (JSON.stringify(next) !== JSON.stringify(chartSettings)) {
     chartSettings = next
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(next))
-    mountChart(0)
-    mountChart(1)
+    mountBothCharts()
   }
   settingsDialog.close()
 })
@@ -421,12 +435,14 @@ document.querySelectorAll<HTMLElement>('.chart-panel').forEach((panel, index) =>
   panel.addEventListener('pointerdown', () => { focused = index as Pane })
 })
 
-mountChart(0)
-mountChart(1)
+mountBothCharts()
 document.querySelector<HTMLElement>('#sidebar')!.inert = true
 renderCandidates()
 renderSetups()
 renderWatchlist()
-void refreshQuotes()
-window.setInterval(() => void refreshQuotes('full'), marketConfig.fullWatchlistRefreshMs)
-window.setInterval(() => void refreshQuotes('active'), marketConfig.activeSetupRefreshMs)
+window.setTimeout(() => void refreshQuotes(), compactViewport.matches ? 650 : 0)
+window.setInterval(() => { if (!document.hidden) void refreshQuotes('full') }, marketConfig.fullWatchlistRefreshMs)
+window.setInterval(() => { if (!document.hidden) void refreshQuotes('active') }, marketConfig.activeSetupRefreshMs)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && (!lastFetch || Date.now() - lastFetch.getTime() >= marketConfig.activeSetupRefreshMs)) void refreshQuotes('active')
+})

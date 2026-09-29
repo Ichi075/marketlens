@@ -50,7 +50,7 @@ Distribution outside the App Store requires Apple signing and notarization. See 
 
 ## Android with Docker
 
-This is the recommended reproducible Android path. The host only needs Docker Desktop or Docker Engine. The image pins Node 22.14.0, pnpm 10.15.1, Rust 1.89.0, JDK 17, Android SDK Platform 36, Build Tools 36.0.0, NDK 28.2.13676358, and Android Command-line Tools 15859902. It installs all four Tauri Android Rust targets. The local `@tauri-apps/cli` 2.11.4 from `pnpm-lock.yaml` runs through `pnpm tauri`.
+This is the recommended reproducible Android path. The host only needs Docker Desktop or Docker Engine. The image pins Node 22.14.0, pnpm 10.15.1, Rust 1.90.0, JDK 17, Android SDK Platform 36, Build Tools 36.0.0, NDK 28.2.13676358, and Android Command-line Tools 15859902. It installs all four Tauri Android Rust targets. The local `@tauri-apps/cli` 2.11.4 from `pnpm-lock.yaml` runs through `pnpm tauri`.
 
 The image uses `linux/amd64` because Google's Linux Android NDK host tools are x86-64. Docker Desktop uses emulation on Apple Silicon, so builds work there but run more slowly.
 

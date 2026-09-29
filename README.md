@@ -18,6 +18,7 @@ Open [demo.html](demo.html) in a browser to explore the interface without a buil
 - Automatic CALL/PUT setup monitoring through level break, completed five-minute confirmation, retest, and reaction.
 - Active Setup cards with a state timeline, one-time OS notification at `SETUP_READY`, and a local Paper Mode entry record.
 - Two independent TradingView charts, saved ticker choices, manual refresh, and tiered quote refresh.
+- Mobile charts use a compact top/bottom layout; Android uses immersive full screen with transient system bars.
 - Dark theme by default, with a saved light/dark preference.
 - Chart settings for extended hours, VWAP, and 8 EMA, reapplied when a ticker changes.
 

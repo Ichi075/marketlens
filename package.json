@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "desktop": "tauri dev",
-    "android": "tauri android dev"
+    "android": "tauri android dev",
+    "android:prepare": "node scripts/prepare-android.mjs",
+    "android:dev-frontend": "pnpm android:prepare && pnpm dev",
+    "android:build-frontend": "pnpm android:prepare && pnpm build"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
