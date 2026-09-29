@@ -97,6 +97,7 @@
     @media(prefers-reduced-transparency:reduce){[data-theme="dark"] .topbar,[data-theme="dark"] .sidebar{background:#1a232e}}
     @media(prefers-contrast:more){[data-theme="dark"] .panel,[data-theme="dark"] .candidate,[data-theme="dark"] .symbol-form,[data-theme="dark"] .toggle,[data-theme="dark"] .mobile-menu,[data-theme="dark"] .close-menu{border-color:#9dafc3}[data-theme="dark"] .kicker,[data-theme="dark"] .chart-title small,[data-theme="dark"] .watch-head>span{color:#b8c7d7}}
     .ticker-logo{position:relative;display:grid;place-items:center;flex:none;width:25px;height:25px;overflow:hidden;border:1px solid #dce4ec;border-radius:8px;background:#fff;color:#62758a;font-size:11px;font-weight:750}.ticker-logo img{position:absolute;inset:0;width:100%;height:100%;padding:3px;object-fit:contain;background:#fff}.number.ticker-logo{width:35px;height:35px;border-radius:11px;font-size:14px}.number.ticker-logo img{padding:5px}.candidate-mark{display:inline-flex;align-items:center;gap:4px;flex:none}.candidate-mark .rank{width:14px}[data-theme="dark"] .ticker-logo{border-color:#435263;background:#fff;color:#52677b}@media(max-width:700px){.number.ticker-logo{width:27px;height:27px;border-radius:8px}}
+    .sidebar{overflow-x:hidden;overflow-y:auto}.watchlist{overflow:visible;flex:none}.sidebar-foot{margin-top:0}.active-setups{padding:13px 18px;border-bottom:1px solid #e8ecf0}.setup-stack{display:grid;gap:6px}.setup-card{overflow:hidden;border:1px solid #dce7ef;border-left:3px solid #2c9c79;border-radius:10px;background:#f8fafc}.setup-card.put{border-left-color:#d46f68}.setup-card.ready{border-color:#e1bd5a;border-left-color:#e1a91b;background:#fff9e9}.setup-card>button{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 9px 5px;border:0;background:transparent;color:inherit;text-align:left}.setup-symbol{display:flex;align-items:center;gap:8px}.setup-symbol strong{display:block;font-size:12px}.setup-symbol small{display:block;margin-top:1px;color:#8996a3;font-size:9px}.setup-state{padding:4px 6px;border-radius:6px;background:#e6f4ef;color:#247b61;font-size:9px;font-weight:750;text-transform:uppercase}.put .setup-state{background:#faeae8;color:#b85c55}.ready .setup-state{background:#f6d875;color:#69500a}.setup-detail,.setup-metrics{padding:0 9px 6px 42px;color:#71808e;font-size:9px;font-variant-numeric:tabular-nums}.setup-card details{border-top:1px solid #e7ecf0;padding:5px 9px 7px;color:#82909c;font-size:9px}.setup-card summary{cursor:pointer;font-weight:650}.setup-card ol{display:grid;gap:3px;margin:6px 0 0;padding:0;list-style:none}.setup-card li{display:grid;grid-template-columns:44px 1fr}.setup-card time{color:#a0abb5}[data-theme="dark"] .active-setups{border-color:#303b49}[data-theme="dark"] .setup-card{border-color:#344658;border-left-color:#54c6a0;background:#1b2531;color:#e5edf5}[data-theme="dark"] .setup-card.put{border-left-color:#ef8b84}[data-theme="dark"] .setup-card.ready{border-color:#8f742b;background:#342d1a}[data-theme="dark"] .setup-symbol small,[data-theme="dark"] .setup-detail,[data-theme="dark"] .setup-metrics,[data-theme="dark"] .setup-card details{color:#98a7b6}[data-theme="dark"] .setup-card details{border-color:#334152}
   </style>
 </head>
 <body>
@@ -105,6 +106,7 @@
       <div class="brand"><div class="mark" aria-hidden="true"><i></i><i></i><i></i></div><div><div class="brand-name">MarketLens</div><span class="brand-sub">Your market workspace</span></div><button class="close-menu" id="close-menu" aria-label="Close watchlist">×</button></div>
       <div class="sidebar-top"><span class="kicker">Live monitor</span><h1>Watchlist</h1><div class="demo-pill">Illustrative watchlist data</div></div>
       <div id="candidates"></div>
+      <section class="active-setups"><div class="section-heading"><div><span class="kicker">Entry monitor</span><h2><span class="symbol-shape" style="color:#598de0">●</span>Active setups</h2></div><small>2</small></div><div class="setup-stack" id="setups"></div></section>
       <div class="watch-head"><div><span class="kicker">Tracking</span><h2>All symbols <span>21</span></h2></div><span>Change % ↓</span></div>
       <div class="filter-wrap"><input id="filter" type="search" placeholder="Filter ticker…" aria-label="Filter watchlist"></div>
       <div class="watchlist" id="watchlist"></div>
@@ -127,6 +129,10 @@
     const byTicker = new Map(symbols.map(item=>[item.ticker,item]));
     const strong = [{ticker:'COIN',score:88.2},{ticker:'HOOD',score:88.1},{ticker:'MU',score:84.7}];
     const weak = [{ticker:'NFLX',score:77.8},{ticker:'SHOP',score:75.7},{ticker:'SBUX',score:71.4}];
+    const setups=[
+      {ticker:'COIN',direction:'CALL',level:'PMH',price:190.20,vwap:189.91,state:'Waiting for retest',rank:'Strong #1',rs:2.1,momentum:.7,rvol:1.7,timeline:[['09:42','Candidate detected'],['09:56','PMH breakout detected'],['10:00','5m breakout confirmed'],['10:00','Waiting for retest']]},
+      {ticker:'NFLX',direction:'PUT',level:'PML',price:74.80,vwap:75.12,state:'SETUP READY',rank:'Weak #1',rs:-1.8,momentum:-.6,rvol:1.4,timeline:[['10:06','PML breakdown detected'],['10:10','5m breakdown confirmed'],['10:17','Retest detected'],['10:18','Retest held · Setup ready']]}
+    ];
     const exchanges = {SPY:'AMEX',QQQ:'NASDAQ',IWM:'AMEX'};
     const studyIds=['VWAP@tv-basicstudies','MAExp@tv-basicstudies'];
     const defaultStudies=['VWAP@tv-basicstudies','MAExp@tv-basicstudies'];
@@ -145,6 +151,9 @@
     const percent = value=>value==null?'—':`${value>0?'+':''}${value.toFixed(2)}%`;
     function renderCandidates(){
       document.querySelector('#candidates').innerHTML=[['Strong',strong],['Weak',weak]].map(([label,items])=>`<section class="candidate-section"><div class="section-heading"><div><span class="kicker">Top 3 candidates</span><h2><span class="symbol-shape ${label==='Strong'?'strong-color':'weak-color'}">●</span>${label}</h2></div><small>3/3</small></div><div class="candidate-stack">${items.map((item,i)=>`<button class="candidate ${label==='Weak'?'weak':''}" data-ticker="${item.ticker}" type="button" title="Load ${item.ticker} in selected chart"><span class="candidate-mark">${logoMarkup(item.ticker)}<span class="rank">0${i+1}</span></span><span class="candidate-label">${item.ticker}<small>Sample ${label.toLowerCase()} ranking</small></span><span class="metric">${percent(byTicker.get(item.ticker).change)}<small>Score ${item.score}</small></span></button>`).join('')}</div></section>`).join('');
+    }
+    function renderSetups(){
+      document.querySelector('#setups').innerHTML=setups.map(item=>`<article class="setup-card ${item.direction==='PUT'?'put':''} ${item.state==='SETUP READY'?'ready':''}"><button type="button" data-ticker="${item.ticker}" title="Load ${item.ticker} in selected chart"><span class="setup-symbol">${logoMarkup(item.ticker)}<span><strong>${item.ticker}</strong><small>${item.direction} · ${item.level}</small></span></span><span class="setup-state">${item.state}</span></button><div class="setup-detail">${item.rank} · ${item.level} ${cash(item.price)} · VWAP ${cash(item.vwap)}</div><div class="setup-metrics">RS ${percent(item.rs)} · 5m ${percent(item.momentum)} · RVOL ${item.rvol.toFixed(1)}x</div><details><summary>Timeline</summary><ol>${item.timeline.map(([time,message])=>`<li><time>${time}</time>${message}</li>`).join('')}</ol></details></article>`).join('');
     }
     function renderWatchlist(){
       const found=symbols.filter(item=>item.ticker.includes(state.filter)).sort((a,b)=>b.change-a.change);
@@ -208,7 +217,7 @@
     document.querySelector('#sidebar-backdrop').addEventListener('click',()=>setSidebarOpen(false));
     document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.querySelector('#sidebar').classList.contains('open'))setSidebarOpen(false)});
     document.querySelector('#sidebar').inert=true;
-    renderCandidates();renderWatchlist();renderCharts();
+    renderCandidates();renderSetups();renderWatchlist();renderCharts();
   </script>
 </body>
 </html>

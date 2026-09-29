@@ -8,7 +8,7 @@ MarketLens is a Tauri 2 stock watch app for Windows, macOS, and Android. It disp
 
 ## HTML demo
 
-Open [demo.html](demo.html) in a browser to explore the interface without a build. You can try watchlist sorting, candidate cards, ticker inputs, the watchlist drawer, and theme switching. Prices and candidate scores in the demo are illustrative. TradingView charts require an internet connection and may be restricted by some browser environments.
+Open [demo.html](demo.html) in a browser to explore the interface without a build. You can try watchlist sorting, candidate cards, illustrative Active Setups and timelines, ticker inputs, the watchlist drawer, and theme switching. Prices, candidate scores, and setup states in the demo are illustrative. TradingView charts require an internet connection and may be restricted by some browser environments.
 
 ## Features
 

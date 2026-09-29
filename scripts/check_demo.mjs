@@ -7,4 +7,5 @@ if (inlineScripts.length !== 1) throw new Error('Expected one inline demo script
 new Script(inlineScripts[0])
 if (html.includes('tv-toggle') || html.includes('sampleChart(')) throw new Error('Sample preview is still present')
 if (!html.includes("interval:'5'")) throw new Error('Default five-minute interval is missing')
+if (!html.includes('Active setups') || !html.includes('SETUP READY')) throw new Error('Setup monitor demo is missing')
 console.log('demo.html: inline JavaScript syntax and TradingView-only view OK')
